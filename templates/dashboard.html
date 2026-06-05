@@ -2716,6 +2716,27 @@
     }
   }
 
+  async function descargarRecoveryFile() {
+    const btn = document.getElementById('btn-recovery-file');
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Generando...';
+    try {
+      const r = await csrfFetch('/api/recovery-file/generar', {method:'POST'});
+      if (!r.ok) { alert('Error al generar el archivo'); return; }
+      const blob = await r.blob();
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = 'arepazo_recovery.txt';
+      a.click();
+      URL.revokeObjectURL(a.href);
+    } catch(e) {
+      alert('Error de conexión');
+    } finally {
+      btn.disabled = false;
+      btn.innerHTML = '<i class="fas fa-file-arrow-down"></i> Generar y descargar archivo de recuperación';
+    }
+  }
+
   function descargarCodigos() {
     if (!codigosGenerados.length) return;
     const fecha = new Date().toLocaleDateString('es-CO');
