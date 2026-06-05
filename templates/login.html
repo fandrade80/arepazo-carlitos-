@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Acceso — Arepazo de Carlitos</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Lato:wght@300;400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+  <style>
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    body{min-height:100vh;display:flex;align-items:center;justify-content:center;background:#1a1008;font-family:'Lato',sans-serif}
+    .login-wrap{width:100%;max-width:420px;padding:24px}
+    .login-card{background:#2a1c0e;border:1px solid #3a2810;border-radius:16px;padding:40px 36px;box-shadow:0 24px 64px rgba(0,0,0,.6)}
+    .login-brand{text-align:center;margin-bottom:32px}
+    .login-brand .icon{width:60px;height:60px;border-radius:50%;background:linear-gradient(135deg,#c8963e,#e8b96a);display:flex;align-items:center;justify-content:center;margin:0 auto 14px;font-size:24px;color:#1a1008}
+    .login-brand h1{font-family:'Playfair Display',serif;color:#f5e6c8;font-size:22px;margin-bottom:4px}
+    .login-brand p{color:#9a7a52;font-size:13px}
+    .login-brand .accent{color:#c8963e}
+    .alert{background:#5c1a1a;border:1px solid #8b3030;color:#ffaaaa;padding:10px 14px;border-radius:8px;font-size:13px;margin-bottom:20px;display:none}
+    .field{margin-bottom:18px}
+    .field label{display:block;color:#c8a87a;font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;margin-bottom:8px}
+    .field label i{margin-right:6px;color:#c8963e}
+    .field input{width:100%;background:#1a1008;border:1px solid #3a2810;border-radius:10px;padding:12px 16px;color:#f5e6c8;font-size:15px;outline:none;transition:border .2s,box-shadow .2s}
+    .field input:focus{border-color:#c8963e;box-shadow:0 0 0 3px rgba(200,150,62,.15)}
+    .pass-wrap{position:relative}
+    .pass-wrap input{padding-right:44px}
+    .pass-toggle{position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:#7a6040;font-size:15px;transition:color .2s}
+    .pass-toggle:hover{color:#c8963e}
+    .btn-submit{width:100%;padding:14px;background:linear-gradient(135deg,#c8963e,#e8b96a);border:none;border-radius:10px;color:#1a1008;font-weight:700;font-size:15px;letter-spacing:.05em;cursor:pointer;margin-top:8px;transition:opacity .2s,transform .1s}
+    .btn-submit:hover{opacity:.9}
+    .btn-submit:active{transform:scale(.98)}
+    .btn-submit:disabled{opacity:.5;cursor:not-allowed}
+    .back-link{display:block;text-align:center;margin-top:20px;color:#9a7a52;font-size:13px;text-decoration:none;transition:color .2s}
+    .back-link:hover{color:#c8963e}
+    .back-link i{margin-right:5px}
+  </style>
+</head>
+<body>
+  <div class="login-wrap">
+    <div class="login-card">
+      <div class="login-brand">
+        <div class="icon"><i class="fas fa-utensils"></i></div>
+        <h1>Acceso Administrativo</h1>
+        <p>Arepazo de <span class="accent">Carlitos</span></p>
+      </div>
+
+      <div class="alert" id="alert"></div>
+
+      <div class="field">
+        <label for="user"><i class="fas fa-user"></i>Usuario</label>
+        <input type="text" id="user" placeholder="Tu usuario" autocomplete="username"/>
+      </div>
+      <div class="field">
+        <label for="pass"><i class="fas fa-lock"></i>Contraseña</label>
+        <div class="pass-wrap">
+          <input type="password" id="pass" placeholder="••••••••" autocomplete="current-password"/>
+          <button class="pass-toggle" type="button" id="toggle" aria-label="Mostrar contraseña">
+            <i class="fas fa-eye"></i>
+          </button>
+        </div>
+      </div>
+
+      <button class="btn-submit" id="submit">
+        <span id="btnText">Ingresar</span>
+      </button>
+
+      <!-- Ítem 65 — Recordar sesión (solo visible para admin) -->
+      <label id="remember-wrap" style="display:flex;align-items:center;gap:8px;justify-content:center;font-size:13px;color:#9a7a52;cursor:pointer;margin-top:4px">
+        <input type="checkbox" id="remember" style="accent-color:#c8963e;width:15px;height:15px"/>
+        Recordar sesión por 30 días
+      </label>
+
+      <a href="/" class="back-link"><i class="fas fa-arrow-left"></i>Volver al sitio</a>
+    </div>
+  </div>
+
+  <script>
+    const alertEl = document.getElementById('alert');
+    const btn = document.getElementById('submit');
+    const btnText = document.getElementById('btnText');
+
+    document.getElementById('toggle').addEventListener('click', () => {
+      const p = document.getElementById('pass');
+      const icon = document.querySelector('#toggle i');
+      p.type = p.type === 'password' ? 'text' : 'password';
+      icon.className = p.type === 'password' ? 'fas fa-eye' : 'fas fa-eye-slash';
+    });
+
+    async function doLogin() {
+      const username = document.getElementById('user').value.trim();
+      const password = document.getElementById('pass').value.trim();
+      alertEl.style.display = 'none';
+      if (!username || !password) {
+        showAlert('Completa todos los campos.');
+        return;
+      }
+      btn.disabled = true;
+      btnText.textContent = 'Verificando…';
+      try {
+        const res = await fetch('/login', {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({
+            username,
+            password,
+            recordar: document.getElementById('remember')?.checked || false
+          })
+        });
+        const data = await res.json();
+        if (data.totp_required) {
+          // Mostrar paso de código TOTP
+          document.querySelector('.login-box').innerHTML = `
+            <div style="text-align:center;margin-bottom:24px">
+              <div style="font-size:36px;margin-bottom:8px">🔐</div>
+              <h2 style="color:#f5e6c8;font-family:'Playfair Display',serif">Verificación en dos pasos</h2>
+              <p style="color:#9a7a52;font-size:13px;margin-top:6px">
+                Abre <strong>Google Authenticator</strong> e ingresa el código de 6 dígitos
+              </p>
+            </div>
+            <div id="totp-err" style="display:none;background:#5c1a1a;border:1px solid #8b3030;
+                 color:#ffaaaa;padding:10px;border-radius:8px;font-size:13px;margin-bottom:14px"></div>
+            <input type="text" id="totp-code" maxlength="6" placeholder="000000" autofocus
+              style="width:100%;background:#1a1008;border:1px solid #3a2810;border-radius:10px;
+                     padding:16px;color:#f5e6c8;font-size:30px;text-align:center;letter-spacing:12px;
+                     font-family:monospace;outline:none;margin-bottom:16px"
+              oninput="this.value=this.value.replace(/\\D/g,'').slice(0,6)"
+              onkeydown="if(event.key==='Enter') verificarTOTP()"/>
+            <button onclick="verificarTOTP()" id="btn-totp"
+              style="width:100%;padding:14px;border-radius:10px;border:none;font-size:15px;
+                     font-weight:700;cursor:pointer;background:linear-gradient(135deg,#c8963e,#e8b96a);
+                     color:#1a1008;margin-bottom:12px">
+              Verificar código
+            </button>
+            <div style="text-align:center">
+              <a href="/recuperar" style="font-size:12px;color:#9a7a52;text-decoration:none">
+                Sin acceso a la app → código de emergencia
+              </a>
+            </div>`;
+          return;
+        }
+
+        if (data.success) {
+          window.location.href = data.redirect;
+        } else {
+          showAlert(data.message || 'Error al iniciar sesión.');
+          btn.disabled = false;
+          btnText.textContent = 'Ingresar';
+        }
+      } catch {
+        showAlert('Error de red. Intenta de nuevo.');
+        btn.disabled = false;
+        btnText.textContent = 'Ingresar';
+      }
+    }
+
+    function showAlert(msg) {
+      alertEl.textContent = msg;
+      alertEl.style.display = 'block';
+    }
+
+    btn.addEventListener('click', doLogin);
+    document.getElementById('pass').addEventListener('keydown', e => { if(e.key==='Enter') doLogin(); });
+
+    async function verificarTOTP() {
+      const codigo = document.getElementById('totp-code')?.value.trim();
+      const btn    = document.getElementById('btn-totp');
+      const errEl  = document.getElementById('totp-err');
+      if (!codigo || codigo.length !== 6) {
+        errEl.textContent = 'Ingresa el código de 6 dígitos.';
+        errEl.style.display = 'block'; return;
+      }
+      btn.disabled = true; btn.textContent = 'Verificando...';
+      errEl.style.display = 'none';
+      try {
+        const res  = await fetch('/api/totp/verificar-login', {
+          method:'POST', headers:{'Content-Type':'application/json'},
+          body: JSON.stringify({codigo})
+        });
+        const data = await res.json();
+        if (data.success) {
+          window.location.href = data.redirect;
+        } else {
+          errEl.textContent   = data.message || 'Código incorrecto.';
+          errEl.style.display = 'block';
+          btn.disabled = false; btn.textContent = 'Verificar código';
+        }
+      } catch {
+        errEl.textContent   = 'Error de conexión.';
+        errEl.style.display = 'block';
+        btn.disabled = false; btn.textContent = 'Verificar código';
+      }
+    }
+  </script>
+</body>
+</html>

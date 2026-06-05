@@ -1,0 +1,888 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Arepazo de carlitos</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Lato:wght@300;400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+</head>
+<body>
+
+  <!-- NAVBAR -->
+  <nav class="navbar" id="navbar">
+    <div class="nav-container">
+      <a href="#" class="nav-logo">
+        <span class="logo-text">Arepazo de <span class="accent">Carlitos</span></span>
+      </a>
+      <ul class="nav-links">
+        <li><a href="#">Inicio</a></li>
+        <li><a href="#mision">Misión &amp; Visión</a></li>
+        <li><a href="#menu">Menú</a></li>
+        <li><a href="#ubicacion">Ubicación</a></li>
+        <li><a href="#contacto">Contacto</a></li>
+      </ul>
+      <a href="tel:3138613067" class="nav-phone">
+        <i class="fas fa-phone"></i> 316 465 5152
+      </a>
+      <!-- Botón login discreto — si hay sesión va directo al dashboard -->
+      {% if session.get('user_id') %}
+      <a href="/dashboard" class="btn-login-nav" title="Ir al dashboard" style="text-decoration:none">
+        <i class="fas fa-gauge-high"></i>
+      </a>
+      {% else %}
+      <button class="btn-login-nav" id="btnLoginNav" title="Acceso administración">
+        <i class="fas fa-user-circle"></i>
+      </button>
+      {% endif %}
+      <button class="hamburger" id="hamburger">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+  </nav>
+
+  <!-- MODAL DE LOGIN ─────────────────────────────────────────────────── -->
+  <div class="login-overlay" id="loginOverlay" role="dialog" aria-modal="true" aria-labelledby="loginTitle">
+    <div class="login-modal">
+      <!-- Botón cerrar -->
+      <button class="login-close" id="loginClose" aria-label="Cerrar">&times;</button>
+
+      <!-- Cabecera -->
+      <div class="login-header">
+        <div class="login-logo-icon">
+          <i class="fas fa-utensils"></i>
+        </div>
+        <h2 id="loginTitle">Acceso Administrativo</h2>
+        <p>Arepazo de <span class="accent">Carlitos</span></p>
+      </div>
+
+      <!-- Formulario -->
+      <div class="login-body">
+        <div class="login-alert" id="loginAlert" aria-live="polite"></div>
+
+        <div class="login-field">
+          <label for="loginUser"><i class="fas fa-user"></i> Usuario</label>
+          <input type="text" id="loginUser" placeholder="Tu usuario" autocomplete="username" />
+        </div>
+
+        <div class="login-field">
+          <label for="loginPass"><i class="fas fa-lock"></i> Contraseña</label>
+          <div class="pass-wrapper">
+            <input type="password" id="loginPass" placeholder="••••••••" autocomplete="current-password" />
+            <button type="button" class="pass-toggle" id="passToggle" aria-label="Mostrar contraseña">
+              <i class="fas fa-eye"></i>
+            </button>
+          </div>
+        </div>
+
+        <button class="btn-login-submit" id="btnLoginSubmit">
+          <span class="btn-text">Ingresar</span>
+          <span class="btn-spinner" hidden><i class="fas fa-spinner fa-spin"></i></span>
+        </button>
+
+        <!-- Recordar sesión -->
+        <label style="display:flex;align-items:center;gap:8px;justify-content:center;
+                       font-size:13px;color:#9a7a52;cursor:pointer;margin-top:12px">
+          <input type="checkbox" id="loginRecordar" style="accent-color:#c8963e;width:14px;height:14px"/>
+          Recordar sesión por 30 días
+        </label>
+
+        <!-- Link recuperación -->
+        <div style="text-align:center;margin-top:14px">
+          <a href="/recuperar" style="font-size:12px;color:#9a7a52;text-decoration:none;transition:color .2s"
+             onmouseover="this.style.color='#c8963e'" onmouseout="this.style.color='#9a7a52'">
+            <i class="fas fa-key" style="margin-right:5px"></i>¿Perdiste el acceso? Usa un código de emergencia
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- HERO -->
+  <section class="hero">
+    <div class="hero-overlay"></div>
+    <div class="hero-content">
+      <p class="hero-sub">Bienvenidos a</p>
+      <div class="hero-divider">
+        <span></span><i class="fas fa-utensils"></i><span></span>
+      </div>
+      <h1 class="hero-title">Arepazo de carlitos<br></h1>
+      <a href="#menu" class="btn-primary">VER MENÚ</a>
+    </div>
+    <div class="hero-scroll">
+      <i class="fas fa-chevron-down"></i>
+    </div>
+  </section>
+
+  <!-- SOBRE NOSOTROS -->
+  <section class="about" id="about">
+    <div class="container">
+      <div class="section-label">Nuestra Introducción</div>
+      <h2 class="section-title">Sobre Arepazo de carlitos</h2>
+      <p class="about-text">
+        Arepazo de carlitos, nuestro rincón de delicias colombianas, te invita a sumergirte en
+        un festín de sabores auténticos. Desde nuestras arepas tradicionales, doradas a la perfección,
+        hasta las irresistibles parrillas que despiertan los sentidos, cada bocado es una experiencia
+        culinaria llena de pasión y tradición.
+      </p>
+      <a href="#" class="btn-outline">DESCUBRE MÁS</a>
+
+      <div class="stats-row">
+        <div class="stat-card">
+          <div class="stat-icon"><i class="fas fa-award"></i></div>
+          <h3>8 Años</h3>
+          <p>de experiencia</p>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon"><i class="fas fa-industry"></i></div>
+          <h3>Fábrica</h3>
+          <p>De Arepas</p>
+        </div>
+        <div class="stat-card" id="fabrica_stats">
+          <div class="stat-icon"><i class="fas fa-flag-checkered"></i></div>
+          <h3>100%</h3>
+          <p>Colombianas</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+
+  <!-- MISIÓN Y VISIÓN -->
+  <section class="mision-vision" id="mision">
+    <div class="container">
+      <div class="section-label">Nuestra Identidad</div>
+      <h2 class="section-title">Misión &amp; Visión</h2>
+      <div class="mv-grid">
+        <div class="mv-card">
+          <div class="mv-icon"><i class="fas fa-bullseye"></i></div>
+          <h3>Nuestra Misión</h3>
+          <p>Ofrecer a nuestros clientes una experiencia gastronómica auténtica y memorable, basada en los sabores tradicionales colombianos. Preparamos cada plato con ingredientes frescos, pasión y el cariño de la cocina casera, brindando un servicio cálido y de calidad que haga sentir a todos como en familia.</p>
+        </div>
+        <div class="mv-card">
+          <div class="mv-icon"><i class="fas fa-eye"></i></div>
+          <h3>Nuestra Visión</h3>
+          <p>Ser reconocidos como el restaurante de arepas y comida colombiana más querido de Girardot y la región, expandiendo nuestra fábrica de arepas artesanales a nivel nacional, y manteniéndonos como referente de sabor auténtico, calidad y tradición para las generaciones futuras.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- HORARIOS -->
+  <section class="schedule">
+    <div class="container">
+      <h2 class="section-title white">Horarios</h2>
+      <div class="schedule-grid">
+        <div class="schedule-item" data-day="lunes">
+<span class="day" data-day="lunes">Lunes</span>
+          <span class="hours">4pm – 11pm</span>
+        </div>
+        <div class="schedule-item" data-day="martes">
+<span class="day" data-day="martes">Martes</span>
+          <span class="hours">4pm – 11pm</span>
+        </div>
+        <div class="schedule-item" data-day="miercoles">
+<span class="day" data-day="miercoles">Miércoles</span>
+          <span class="hours">4pm – 11pm</span>
+        </div>
+        <div class="schedule-item" data-day="jueves">
+<span class="day" data-day="jueves">Jueves</span>
+          <span class="hours">4pm – 11pm</span>
+        </div>
+        <div class="schedule-item" data-day="viernes">
+<span class="day" data-day="viernes">Viernes</span>
+          <span class="hours">4pm – 11pm</span>
+        </div>
+        <div class="schedule-item" data-day="sabado">
+<span class="day" data-day="sabado">Sábado</span>
+          <span class="hours">4pm – 11pm</span>
+        </div>
+        <div class="schedule-item" data-day="domingo">
+<span class="day" data-day="domingo">Domingo</span>
+          <span class="hours">4pm – 11pm</span>
+        </div>
+      </div>
+      <div class="birthday-banner">
+        <i class="fas fa-birthday-cake"></i>
+        <span>CELEBRACIÓN CUMPLEAÑOS</span>
+        <a id="btn-reservar-cumple" href="https://wa.me/573003830842?text=%C2%A1Hola%20Arepazo%20de%20Carlitos!%20Quiero%20reservar%20un%20cumplea%C3%B1os%20%F0%9F%8E%82" target="_blank" rel="noopener" class="btn-primary small">RESERVAR</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- MENÚ -->
+  <!-- Sección Promociones (dinámica) -->
+  <section id="promociones-section" style="display:none;padding:60px 20px;background:#1a0e05">
+    <div style="max-width:1100px;margin:0 auto">
+      <div style="text-align:center;margin-bottom:36px">
+        <div style="font-size:13px;color:#c8963e;letter-spacing:.2em;text-transform:uppercase;margin-bottom:8px">
+          🏷️ Ofertas especiales
+        </div>
+        <h2 style="font-family:'Playfair Display',serif;font-size:2rem;color:#f5e6c8;margin:0">
+          Promociones del día
+        </h2>
+        <p style="color:#9a7a52;margin-top:8px;font-size:14px">
+          Aprovecha estas ofertas por tiempo limitado
+        </p>
+      </div>
+      <div id="promos-grid"
+        style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:20px">
+      </div>
+    </div>
+  </section>
+
+  <section class="menu" id="menu">
+    <div class="container">
+      <div class="section-label">Selecciona en</div>
+      <h2 class="section-title">Nuestro Menú</h2>
+      <div class="menu-grid">
+
+        <div class="menu-card">
+          <div class="menu-img" style="background-image:url('/static/img/arepas/pollo_champinones.jpg')"></div>
+          <div class="menu-info">
+            <h3>Pollo con champiñones</h3>
+            <p>Champiñones, pollo, queso fundido, salsa blanca y huevo de codorniz</p>
+            <span class="price">$14.000</span>
+          </div>
+        </div>
+
+        <div class="menu-card">
+          <div class="menu-img" style="background-image:url('/static/img/arepas/ranchera.jpg')"></div>
+          <div class="menu-info">
+            <h3>Super Ranchera</h3>
+            <p>Queso, chorizo, chicharrón, papitas y guacamole</p>
+            <span class="price">$17.000</span>
+          </div>
+        </div>
+
+        <div class="menu-card">
+          <div class="menu-img" style="background-image:url('/static/img/arepas/chingada.jpg')"></div>
+          <div class="menu-info">
+            <h3>La Chingada</h3>
+            <p>Queso, maíz, guacamole, jamón, pollo, carne y chicharrón</p>
+            <span class="price">$17.000</span>
+          </div>
+        </div>
+
+        <div class="menu-card">
+          <div class="menu-img" style="background-image:url('/static/img/arepas/tropical.jpg')"></div>
+          <div class="menu-info">
+            <h3>Tropical</h3>
+            <p>Queso, jamón, pollo y piña</p>
+            <span class="price">$14.000</span>
+          </div>
+        </div>
+
+        <div class="menu-card">
+          <div class="menu-img" style="background-image:url('/static/img/arepas/chicarrona.jpg')"></div>
+          <div class="menu-info">
+            <h3>Chicarrona</h3>
+            <p>Queso, carne, chicharrón y guacamole</p>
+            <span class="price">$17.000</span>
+          </div>
+        </div>
+
+        <div class="menu-card">
+          <div class="menu-img" style="background-image:url('/static/img/arepas/combo.jpg')"></div>
+          <div class="menu-info">
+            <h3>Combo Clásico</h3>
+            <p>3 arepas de queso, 2 chorizos y porción de huevos de codorniz</p>
+            <span class="price">$22.000</span>
+          </div>
+        </div>
+
+      </div>
+      <a href="#" class="btn-primary centered">VER MENÚ COMPLETO</a>
+    </div>
+  </section>
+
+  <!-- FRASE -->
+  <section class="quote-section">
+    <div class="container">
+      <p class="quote-text">En Areapazo de carlitos, <strong>¡se cocina con sazón y cariño, como la abuela lo hacía!</strong></p>
+    </div>
+  </section>
+
+  <!-- SERVICIOS -->
+  <section class="services">
+    <div class="container">
+      <div class="section-label">Qué Hacemos</div>
+      <h2 class="section-title">Nuestros Servicios</h2>
+      <div class="services-grid">
+        <div class="service-card">
+          <div class="service-icon"><i class="fas fa-fire"></i></div>
+          <h3>Parrilla</h3>
+          <p>Sumérgete en la experiencia de nuestras parrillas, donde el humo aromático y el sabor auténtico se combinan para ofrecerte suculentas delicias.</p>
+        </div>
+        <div class="service-card">
+          <div class="service-icon"><i class="fas fa-motorcycle"></i></div>
+          <h3>Domicilios</h3>
+          <p>Llevamos el sabor de Arepazo de Carlitos hasta tu puerta. Pedidos a domicilio rápidos y calientes, para que disfrutes desde la comodidad de tu hogar.</p>
+        </div>
+        <div class="service-card">
+          <div class="service-icon"><i class="fas fa-hamburger"></i></div>
+          <h3>Comidas Rápidas</h3>
+          <p>Satisfacción instantánea sin sacrificar el sabor. Nuestras comidas rápidas están diseñadas para satisfacer tus antojos con rapidez y calidad.</p>
+        </div>
+        <div class="service-card">
+          <div class="service-icon"><i class="fas fa-music"></i></div>
+          <h3>Buen Ambiente</h3>
+          <p>En nuestro espacio, el buen ambiente es más que una característica, es el corazón de cada experiencia.</p>
+        </div>
+        <div class="service-card">
+          <div class="service-icon"><i class="fas fa-star"></i></div>
+          <h3>Alta Calidad</h3>
+          <p>En Areapazo de carlitos, la calidad es nuestra prioridad. Desde la selección de los ingredientes frescos hasta la meticulosa preparación de cada platillo.</p>
+        </div>
+        <div class="service-card">
+          <div class="service-icon"><i class="fas fa-tag"></i></div>
+          <h3>Económico</h3>
+          <p>Descubre la delicia de disfrutar de alta calidad sin romper el bolsillo. En Arepazo de carlitos , creemos que la buena comida debe ser accesible para todos.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- CONTADORES -->
+    <div class="counters" id="stats-counters">
+      <div class="counter-item">
+        <span class="counter-number" id="stat-platos">—</span><span id="stat-platos-sfx">+</span>
+        <p>Platos disponibles</p>
+      </div>
+      <div class="counter-item">
+        <span class="counter-number" id="stat-ordenes">—</span><span id="stat-ordenes-sfx"></span>
+        <p>Órdenes atendidas</p>
+      </div>
+      <div class="counter-item">
+        <span class="counter-number" data-target="8">0</span><span>+</span>
+        <p>Años de experiencia</p>
+      </div>
+      <div class="counter-item">
+        <span class="counter-number" id="stat-mes">—</span><span id="stat-mes-sfx"></span>
+        <p>Órdenes este mes</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- UBICACIÓN -->
+  <section class="ubicacion" id="ubicacion">
+    <div class="container">
+      <div class="section-label">Encuéntranos</div>
+      <h2 class="section-title">Nuestra Ubicación</h2>
+      <p class="ubicacion-desc"><i class="fas fa-map-marker-alt"></i> Manzana 10 #Casa 23, Girardot, Cundinamarca, Colombia</p>
+      <div class="map-wrapper-small">
+        <iframe
+          src="https://www.openstreetmap.org/export/embed.html?bbox=-74.8200%2C4.2800%2C-74.7800%2C4.3100&layer=mapnik&marker=4.2965%2C-74.8032"
+          width="100%"
+          height="360"
+          style="border:0;border-radius:12px;"
+          allowfullscreen=""
+          loading="lazy"
+          referrerpolicy="no-referrer-when-downgrade"
+          title="Ubicación Arepazo de Carlitos">
+        </iframe>
+      </div>
+    </div>
+  </section>
+
+  <!-- ZONAS DE DOMICILIO -->
+  <!-- Botón flotante WhatsApp -->
+  <a id="wa-float" href="#" target="_blank" rel="noopener"
+    style="position:fixed;bottom:28px;right:28px;z-index:999;
+           background:#25d366;color:#fff;border-radius:50%;width:58px;height:58px;
+           display:flex;align-items:center;justify-content:center;
+           box-shadow:0 4px 16px rgba(0,0,0,.35);text-decoration:none;
+           font-size:26px;transition:transform .2s"
+    onmouseover="this.style.transform='scale(1.1)'"
+    onmouseout="this.style.transform='scale(1)'"
+    title="Reservar cumpleaños por WhatsApp">
+    <i class="fab fa-whatsapp"></i>
+  </a>
+
+  <section class="domicilios" id="domicilios">
+    <div class="container">
+      <div class="section-label">Cobertura</div>
+      <h2 class="section-title">Zonas de Domicilio</h2>
+      <p class="domicilio-sub">Selecciona una zona para ver los barrios que cubrimos y el costo del domicilio</p>
+
+      <div class="domicilio-layout">
+
+        <!-- TARJETAS DE COMUNAS -->
+        <div class="comunas-grid">
+
+          <button class="comuna-card" data-id="1"
+            onmouseenter="verComuna(1)" onmouseleave="resetComuna()"
+            onclick="verComuna(1)" style="--cc:#c8963e">
+            <div class="cc-num">1</div>
+            <div class="cc-nombre">Comuna 1</div>
+            <div class="cc-sub">Centro</div>
+            <div class="cc-precio">$3.000</div>
+          </button>
+
+          <button class="comuna-card" data-id="2"
+            onmouseenter="verComuna(2)" onmouseleave="resetComuna()"
+            onclick="verComuna(2)" style="--cc:#3a8c5c">
+            <div class="cc-num">2</div>
+            <div class="cc-nombre">Comuna 2</div>
+            <div class="cc-sub">Sur</div>
+            <div class="cc-precio">$5.000</div>
+          </button>
+
+          <button class="comuna-card" data-id="3"
+            onmouseenter="verComuna(3)" onmouseleave="resetComuna()"
+            onclick="verComuna(3)" style="--cc:#c0392b">
+            <div class="cc-num">3</div>
+            <div class="cc-nombre">Comuna 3</div>
+            <div class="cc-sub">Occidente</div>
+            <div class="cc-precio">$6.000</div>
+          </button>
+
+          <button class="comuna-card" data-id="4"
+            onmouseenter="verComuna(4)" onmouseleave="resetComuna()"
+            onclick="verComuna(4)" style="--cc:#27ae60">
+            <div class="cc-num">4</div>
+            <div class="cc-nombre">Comuna 4</div>
+            <div class="cc-sub">Norte</div>
+            <div class="cc-precio">$5.000</div>
+          </button>
+
+          <button class="comuna-card" data-id="5"
+            onmouseenter="verComuna(5)" onmouseleave="resetComuna()"
+            onclick="verComuna(5)" style="--cc:#8e44ad">
+            <div class="cc-num">5</div>
+            <div class="cc-nombre">Comuna 5</div>
+            <div class="cc-sub">Oriente</div>
+            <div class="cc-precio">$7.000</div>
+          </button>
+
+          <button class="comuna-card cc-especial" data-id="6"
+            onmouseenter="verComuna(6)" onmouseleave="resetComuna()"
+            onclick="verComuna(6)" style="--cc:#e8b96a">
+            <div class="cc-num" style="font-size:18px">🏍️</div>
+            <div class="cc-nombre">Ricaurte</div>
+            <div class="cc-sub">y Flandes</div>
+            <div class="cc-precio">$10.000</div>
+          </button>
+
+        </div>
+
+        <!-- PANEL DERECHO -->
+        <div class="domicilio-info">
+          <div class="info-panel" id="info-panel">
+
+            <div class="info-default" id="info-default">
+              <i class="fas fa-motorcycle"></i>
+              <p>Pasa el cursor sobre una <strong>zona</strong> para ver los barrios que cubrimos</p>
+            </div>
+
+            <div class="info-activo" id="info-activo" style="display:none">
+              <div class="ia-header" id="ia-header"></div>
+              <div class="ia-precio" id="ia-precio"></div>
+              <div class="ia-barrios-wrap">
+                <p class="ia-barrios-lbl"><i class="fas fa-map-pin"></i> Barrios incluidos</p>
+                <div class="ia-barrios" id="ia-barrios"></div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <style>
+  /* ── Domicilios layout ── */
+  .domicilio-layout{display:flex;gap:28px;align-items:flex-start;flex-wrap:wrap;margin-top:36px}
+  .comunas-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;flex:0 0 auto;width:360px;max-width:100%}
+
+  .comuna-card{background:#2a1c0e;border:2px solid #3a2810;border-radius:14px;
+               padding:18px 14px;text-align:center;cursor:pointer;transition:.22s;
+               position:relative;overflow:hidden;display:flex;flex-direction:column;
+               align-items:center;gap:4px}
+  .comuna-card::before{content:'';position:absolute;top:0;left:0;right:0;height:4px;
+                       background:var(--cc)}
+  .comuna-card:hover,.comuna-card.activa{border-color:var(--cc);
+    box-shadow:0 0 0 1px var(--cc);background:#35220e}
+  .cc-num{font-family:'Playfair Display',serif;font-size:28px;font-weight:700;
+          color:var(--cc);line-height:1}
+  .cc-nombre{font-size:13px;font-weight:800;color:#f5e6c8;letter-spacing:.05em;margin-top:2px}
+  .cc-sub{font-size:11px;color:#9a7a52;letter-spacing:.04em}
+  .cc-precio{margin-top:8px;font-size:15px;font-weight:800;color:var(--cc);
+             background:#1a0e05;padding:4px 12px;border-radius:20px}
+  .cc-especial{grid-column:1/-1}
+
+  /* Panel derecho */
+  .domicilio-info{flex:1;min-width:240px}
+  .info-panel{background:#2a1c0e;border:1px solid #3a2810;border-radius:14px;
+              padding:26px;min-height:300px}
+  .info-default{text-align:center;padding:40px 10px;color:#9a7a52}
+  .info-default i{font-size:38px;color:#c8963e;display:block;margin-bottom:14px}
+  .info-default p{font-size:14px;line-height:1.6}
+
+  /* Panel activo */
+  .ia-header{font-family:'Playfair Display',serif;font-size:22px;color:#f5e6c8;
+             margin-bottom:6px;border-bottom:1px solid #3a2810;padding-bottom:12px}
+  .ia-precio{font-size:32px;font-weight:800;color:#c8963e;font-family:'Playfair Display',serif;
+             text-align:center;margin:14px 0;background:#1a0e05;border-radius:10px;padding:12px}
+  .ia-barrios-lbl{font-size:11px;color:#9a7a52;text-transform:uppercase;
+                  letter-spacing:.1em;margin:0 0 10px;font-weight:700}
+  .ia-barrios{display:flex;flex-wrap:wrap;gap:6px}
+  .b-tag{background:#1a0e05;border:1px solid #3a2810;border-radius:20px;
+         padding:4px 11px;font-size:11px;color:#b8986a;transition:.15s}
+  .b-tag:hover{border-color:#c8963e;color:#f5e6c8}
+
+  @media(max-width:720px){
+    .domicilio-layout{flex-direction:column}
+    .comunas-grid{width:100%;grid-template-columns:repeat(2,1fr)}
+    .cc-especial{grid-column:1/-1}
+  }
+  </style>
+
+      <!-- TECNOLOGÍAS -->
+  <section class="tecnologias">
+    <div class="container">
+      <div class="section-label">Stack Técnico</div>
+      <h2 class="section-title">Tecnologías Utilizadas</h2>
+      <div class="tech-grid">
+        <div class="tech-card">
+          <div class="tech-icon"><i class="fab fa-python"></i></div>
+          <span>Python</span>
+        </div>
+        <div class="tech-card">
+          <div class="tech-icon flask-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="36" height="36"><path d="M8.87 2.5a.5.5 0 0 0-.45.28L7 5.5H5a.5.5 0 0 0-.5.5v.5a.5.5 0 0 0 .5.5h.27L3.1 12.09A4.5 4.5 0 0 0 7.5 18h.05A4.5 4.5 0 0 0 12 13.5V13h-.5a.5.5 0 0 1 0-1H12v-.5a.5.5 0 0 1 1 0V13h.5a.5.5 0 0 1 0 1H13v.5a4.5 4.5 0 0 0 4.45 4.5h.05a4.5 4.5 0 0 0 4.4-5.91L19.73 6.5H20a.5.5 0 0 0 .5-.5V6a.5.5 0 0 0-.5-.5h-2L16.58 2.78a.5.5 0 0 0-.45-.28z"/></svg>
+          </div>
+          <span>Flask</span>
+        </div>
+        <div class="tech-card">
+          <div class="tech-icon"><i class="fab fa-html5"></i></div>
+          <span>HTML5</span>
+        </div>
+        <div class="tech-card">
+          <div class="tech-icon"><i class="fab fa-css3-alt"></i></div>
+          <span>CSS3</span>
+        </div>
+        <div class="tech-card">
+          <div class="tech-icon"><i class="fas fa-database"></i></div>
+          <span>MySQL</span>
+        </div>
+      </div>
+      <div class="dev-info">
+        <div class="dev-card">
+          <div class="dev-avatar"><i class="fas fa-code"></i></div>
+          <div class="dev-details">
+            <p class="dev-role">Desarrollador Principal</p>
+            <h4 class="dev-name">Fabián Andrés Andrade Lizcano</h4>
+            <p class="dev-org"><i class="fas fa-university"></i> Con consultoría de <strong>UniEspinal del Tolima</strong></p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+
+  <!-- IDENTIDAD VISUAL -->
+  <section class="identidad" id="identidad">
+    <div class="container">
+      <div class="section-label">Diseño &amp; Identidad</div>
+      <h2 class="section-title">Tipografía &amp; Paleta</h2>
+      <p class="identidad-sub">Decisiones visuales que comunican tradición, calidez y confianza — la misma experiencia del restaurante, trasladada a la pantalla.</p>
+
+      <!-- TIPOGRAFÍA -->
+      <div class="identidad-bloque-titulo">Tipografía</div>
+      <div class="tipo-grid">
+        <div class="tipo-card">
+          <div class="tipo-name">Playfair Display</div>
+          <div class="tipo-specimen tipo-serif">Arepazo</div>
+          <p class="tipo-desc">Serif de alto contraste con remates elegantes. Transmite tradición, carácter artesanal y herencia gastronómica. Sus trazos gruesos remiten a los carteles de plazas de mercado colombianas.</p>
+          <span class="tipo-uso">Títulos · Precios · Logo</span>
+        </div>
+        <div class="tipo-card">
+          <div class="tipo-name">Lato</div>
+          <div class="tipo-specimen tipo-sans">MENÚ</div>
+          <p class="tipo-desc">Sans-serif geométrica, limpia y muy legible en pantalla. Contrasta con Playfair para crear jerarquía clara: lo clásico para los titulares, lo funcional para el contenido.</p>
+          <span class="tipo-uso">Cuerpo · Nav · Etiquetas</span>
+        </div>
+      </div>
+
+      <!-- PALETA -->
+      <div class="identidad-bloque-titulo" style="margin-top:56px">Paleta de Colores</div>
+      <div class="paleta-swatches">
+        <div class="swatch-card">
+          <div class="swatch-color" style="background:#c8963e"></div>
+          <div class="swatch-info">
+            <span class="swatch-name">Dorado</span>
+            <span class="swatch-hex">#c8963e</span>
+            <span class="swatch-role">Color principal — arepas doradas, calor y apetito</span>
+          </div>
+        </div>
+        <div class="swatch-card">
+          <div class="swatch-color" style="background:#e8b96a"></div>
+          <div class="swatch-info">
+            <span class="swatch-name">Dorado claro</span>
+            <span class="swatch-hex">#e8b96a</span>
+            <span class="swatch-role">Hover, bordes activos y detalles decorativos</span>
+          </div>
+        </div>
+        <div class="swatch-card">
+          <div class="swatch-color" style="background:#1a1008"></div>
+          <div class="swatch-info">
+            <span class="swatch-name">Oscuro</span>
+            <span class="swatch-hex">#1a1008</span>
+            <span class="swatch-role">Fondos nocturnos — navbar, footer, hero</span>
+          </div>
+        </div>
+        <div class="swatch-card">
+          <div class="swatch-color" style="background:#2a1c0e"></div>
+          <div class="swatch-info">
+            <span class="swatch-name">Oscuro 2</span>
+            <span class="swatch-hex">#2a1c0e</span>
+            <span class="swatch-role">Secciones alternas — horarios, contadores</span>
+          </div>
+        </div>
+        <div class="swatch-card">
+          <div class="swatch-color" style="background:#fdf6ec; border-top: 2px solid #e0d5c5;"></div>
+          <div class="swatch-info">
+            <span class="swatch-name">Crema</span>
+            <span class="swatch-hex">#fdf6ec</span>
+            <span class="swatch-role">Fondo de página — neutro, cálido, orgánico</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- USO POR SECCIÓN -->
+      <div class="identidad-bloque-titulo" style="margin-top:56px">Uso por Sección</div>
+      <div class="uso-grid">
+        <div class="uso-row">
+          <div class="uso-dot" style="background:#1a1008"></div>
+          <div class="uso-text"><strong>Navbar / Hero / Footer</strong>Oscuro con acento dorado. Contraste máximo para anclar la página.</div>
+        </div>
+        <div class="uso-row">
+          <div class="uso-dot" style="background:#fdf6ec; border: 2px solid #ccc;"></div>
+          <div class="uso-text"><strong>Sobre nosotros / Menú / Misión</strong>Crema de fondo, tarjetas blancas. Secciones de lectura cómoda.</div>
+        </div>
+        <div class="uso-row">
+          <div class="uso-dot" style="background:#2a1c0e"></div>
+          <div class="uso-text"><strong>Horarios / Ubicación</strong>Oscuro secundario. Ritmo visual alterno que separa bloques sin cortar el scroll.</div>
+        </div>
+        <div class="uso-row">
+          <div class="uso-dot" style="background:#c8963e"></div>
+          <div class="uso-text"><strong>Precios / CTA / Días activos</strong>Dorado puro para los puntos de acción — llama la atención sin gritar.</div>
+        </div>
+        <div class="uso-row">
+          <div class="uso-dot" style="background:#3a2810"></div>
+          <div class="uso-text"><strong>Contadores / Servicios</strong>Marrón profundo, derivado de la paleta base. Calidez industrial.</div>
+        </div>
+        <div class="uso-row">
+          <div class="uso-dot" style="background:#e8b96a"></div>
+          <div class="uso-text"><strong>Íconos / Hover / Mapa</strong>Dorado claro. Señalización sutil sin romper el equilibrio tonal.</div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer class="footer" id="contacto">
+    <div class="footer-container">
+      <div class="footer-brand">
+        <p class="logo-text">Arpeazo de <span class="accent">Carlitos</span></p>
+        <p class="footer-desc">Gracias por elegir Areapazo de carlitos, donde cada bocado es una experiencia única. Descubre la auténtica cocina colombiana con nosotros.</p>
+        <div class="social-links">
+          <a href="" target="_blank"><i class="fab fa-facebook-square"></i></a>
+          <a href="" target="_blank"><i class="fab fa-instagram"></i></a>
+        </div>
+      </div>
+
+      <div class="footer-nav">
+        <h4>Menú</h4>
+        <ul>
+          <li><a href="#">Inicio</a></li>
+          <li><a href="#menu">Menú</a></li>
+          <li><a href="#mision">Misión &amp; Visión</a></li>
+          <li><a href="#ubicacion">Ubicación</a></li>
+          <li><a href="#contacto">Contacto</a></li>
+        </ul>
+      </div>
+
+      <div class="footer-contact">
+        <h4>Contacto</h4>
+        <p><i class="fas fa-phone"></i> <strong>Restaurante:</strong><br><a href="tel:3138613067">316 465 5152</a></p>
+        <p><i class="fas fa-phone"></i> <strong>Fábrica de Arepas:</strong><br><a href="tel:3007781623">316 465 5152</a></p>
+        <p><i class="fas fa-envelope"></i> <a href="mailto:arepazodecarlitos123@hotmail.com">arepazodecarlitos123@hotmail.com</a></p>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <p>© Copyright 2024 Areapazo de carlitos</p>
+    </div>
+  </footer>
+
+  <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+  <script>
+  // ── Mapa interactivo de zonas de domicilio ───────────────────────────────
+  const COMUNAS = {
+    1: {
+      nombre: 'Comuna 1 — Centro',
+      tarifa: '$3.000',
+      barrios: ['San Miguel','Centro','Granada','Sucre','Murillo Toro','Santander',
+                'Bogotá','Los Almendros','Blanco','La Magdalena','Bavaria',
+                'San Antonio','Miraflores']
+    },
+    2: {
+      nombre: 'Comuna 2 — Sur',
+      tarifa: '$5.000',
+      barrios: ['Puerto Montero','Puerto Cabrera','10 de Mayo','20 de Julio',
+                'Puerto Monguí','Urbanización Tocarema','Santa Mónica','El Divino Niño',
+                'Bocas del Bogotá','Parques Bocas del Bogotá','Acacias','Alto de La Cruz',
+                'Alto del Rosario','Las Rosas','El Porvenir','Portal de Santa Mónica']
+    },
+    3: {
+      nombre: 'Comuna 3 — Occidente',
+      tarifa: '$6.000',
+      barrios: ['Arrayanes','Esperanza','Quinto Patio','Buenos Aires','Parques de Andalucía',
+                'La Colina Campestre','San Luis','Santa Helena','La Colina','Villa Alexander',
+                'La Arboleda','Centenario','Cámbulos','Las Mercedes','Gólgota','Meneses',
+                'Estación','Gaitán','El Paraíso','Villampiss','Villa Cecilia','Vivisolo I y II',
+                'Santa Isabel','La Maravilla','Los Mangos','El Nogal','Guadalquivir',
+                'Madeira','Las Quintas','Villa del Sol','Villa Vanessa']
+    },
+    4: {
+      nombre: 'Comuna 4 — Norte',
+      tarifa: '$5.000',
+      barrios: ['Altos del Peñón','El Peñón','Bosques del Norte','Diamante',
+                'Diamante Popular','Alicante','Altos de Chicalá','Altos de Alcatraz',
+                'Balcones','Brisas del Bogotá','Colsubsidio','El Cedro','El Cedrito',
+                'Alameda','Alcatraz']
+    },
+    5: {
+      nombre: 'Comuna 5 — Oriente',
+      tarifa: '$7.000',
+      barrios: ['Bello Horizonte','Ciudad Montes','Ciudadela Comgirardot',
+                'Condominio El Mirador','Brisas de Girardot','Manuel del Sur',
+                'Santa Rita','La Esperanza','El Triunfo']
+    },
+    6: {
+      nombre: 'Ricaurte y Flandes',
+      tarifa: '$10.000',
+      barrios: ['Ricaurte (entrada)','Flandes — Tolima (entrada)']
+    }
+  };
+
+  let _comunaPinned = null;
+
+  function verComuna(id) {
+    const c = COMUNAS[id];
+    if (!c) return;
+    _comunaPinned = id;
+    _renderPanel(id);
+    document.querySelectorAll('.comuna-card').forEach(el => {
+      el.classList.toggle('activa', parseInt(el.dataset.id) === id);
+    });
+  }
+
+  function resetComuna() {
+    if (_comunaPinned) return;   // si hay uno fijado por click, no se oculta
+    document.getElementById('info-default').style.display = 'block';
+    document.getElementById('info-activo').style.display  = 'none';
+    document.querySelectorAll('.comuna-card').forEach(el => el.classList.remove('activa'));
+  }
+
+  function _renderPanel(id) {
+    const c = COMUNAS[id];
+    document.getElementById('info-default').style.display = 'none';
+    document.getElementById('info-activo').style.display  = 'block';
+    document.getElementById('ia-header').textContent      = c.nombre;
+    document.getElementById('ia-precio').textContent      = c.tarifa;
+    document.getElementById('ia-barrios').innerHTML =
+      c.barrios.map(b => '<span class="b-tag">' + b + '</span>').join('');
+  }
+
+  // Click fuera de tarjetas → desfijar
+  document.addEventListener('click', function(e) {
+    if (!e.target.closest('.comuna-card')) {
+      _comunaPinned = null;
+      resetComuna();
+    }
+  });
+
+  // ── Stats en tiempo real desde la BD ────────────────────────────────────
+  (async function cargarStats() {
+    const set = (id, val, sfx) => {
+      const el = document.getElementById(id);
+      const sx = document.getElementById(id + '-sfx');
+      if (el) el.textContent = val;
+      if (sx) sx.textContent = sfx || '';
+    };
+    try {
+      const res  = await fetch('/api/stats-publicos');
+      if (!res.ok) throw new Error('no endpoint');
+      const data = await res.json();
+      if (!data.success) throw new Error('no success');
+
+      const platos  = parseInt(data.total_productos) || 0;
+      const ordenes = parseInt(data.total_ordenes)   || 0;
+      const mes     = parseInt(data.ordenes_mes)     || 0;
+
+      // Verificar que son números válidos
+      if (isNaN(platos) && isNaN(ordenes)) throw new Error('NaN');
+
+      const fmt = v => v >= 1000 ? (v/1000).toFixed(1).replace('.0','') + 'k' : String(v);
+      set('stat-platos',  fmt(platos),  '+');
+      set('stat-ordenes', fmt(ordenes), '');
+      set('stat-mes',     fmt(mes),     '');
+    } catch {
+      set('stat-platos',  '14', '+');
+      set('stat-ordenes', '—',  '');
+      set('stat-mes',     '—',  '');
+    }
+  })();
+
+  // ── WhatsApp: cargar número y mensaje desde config ───────────────────────
+  (async function cargarWhatsApp() {
+    const btnFloat    = document.getElementById('wa-float');
+    const btnReservar = document.getElementById('btn-reservar-cumple');
+    try {
+      const res  = await fetch('/api/whatsapp-config');
+      const data = await res.json();
+      const num  = (data.numero || '3003830842').replace(/\D/g,'');
+      const msg  = data.mensaje || '¡Hola Arepazo de Carlitos! Quiero reservar un cumpleaños 🎂';
+      const url  = `https://wa.me/57${num}?text=${encodeURIComponent(msg)}`;
+      if (btnFloat)    btnFloat.href    = url;
+      if (btnReservar) btnReservar.href = url;
+    } catch {
+      const url = 'https://wa.me/573003830842?text=' + encodeURIComponent('¡Hola Arepazo de Carlitos! Quiero reservar un cumpleaños 🎂');
+      if (btnFloat)    btnFloat.href    = url;
+      if (btnReservar) btnReservar.href = url;
+    }
+  })();
+
+  // ── Promociones activas ───────────────────────────────────────────────────
+  (async function() {
+    try {
+      const res   = await fetch('/api/promociones');
+      const data  = await res.json();
+      const promos = data.promociones || [];
+      if (!promos.length) return;
+      const sec  = document.getElementById('promociones-section');
+      const grid = document.getElementById('promos-grid');
+      const fmt  = v => '$' + parseInt(v).toLocaleString('es-CO');
+      if (sec) sec.style.display = 'block';
+      if (grid) grid.innerHTML = promos.map(p => {
+        const vigencia = p.vigencia_hasta
+          ? '<div style="font-size:11px;color:#9a7a52;margin-top:6px">⏰ Válido hasta ' + p.vigencia_hasta + '</div>'
+          : '';
+        return '<div style="background:#2a1c0e;border:1px solid #3a2810;border-radius:14px;padding:22px;position:relative;overflow:hidden">'
+          + '<div style="position:absolute;top:14px;right:14px;background:#e65100;color:#fff;border-radius:6px;padding:4px 10px;font-size:13px;font-weight:700">-' + p.descuento_pct + '%</div>'
+          + '<div style="font-size:26px;margin-bottom:10px">🍽️</div>'
+          + '<h3 style="font-family:\'Playfair Display\',serif;color:#f5e6c8;font-size:17px;margin:0 0 8px">' + p.nombre + '</h3>'
+          + '<p style="color:#9a7a52;font-size:13px;margin:0 0 14px;line-height:1.5">' + (p.descripcion || '') + '</p>'
+          + '<div style="font-size:22px;font-weight:700;color:#c8963e">' + fmt(p.precio_promo) + '</div>'
+          + vigencia
+          + '</div>';
+      }).join('');
+    } catch(e) {}
+  })();
+  </script>
+</body>
+</html>

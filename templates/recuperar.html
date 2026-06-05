@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Recuperar acceso — Arepazo de Carlitos</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Lato:wght@300;400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+  <style>
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    body{min-height:100vh;display:flex;align-items:center;justify-content:center;
+         background:#1a1008;font-family:'Lato',sans-serif;padding:24px}
+    .card{background:#2a1c0e;border:1px solid #3a2810;border-radius:16px;
+          padding:40px 36px;max-width:420px;width:100%;box-shadow:0 24px 64px rgba(0,0,0,.6)}
+    .brand{text-align:center;margin-bottom:28px}
+    .brand-icon{width:56px;height:56px;border-radius:50%;background:linear-gradient(135deg,#c8963e,#e8b96a);
+                display:flex;align-items:center;justify-content:center;margin:0 auto 12px;font-size:22px;color:#1a1008}
+    .brand h1{font-family:'Playfair Display',serif;color:#f5e6c8;font-size:20px;margin-bottom:4px}
+    .brand p{color:#9a7a52;font-size:13px}
+    .info-box{background:#1a2a1a;border:1px solid #2e5c2e;border-radius:10px;
+              padding:12px 16px;font-size:12px;color:#6dbf6d;margin-bottom:20px;line-height:1.6}
+    .field{margin-bottom:16px}
+    .field label{display:block;font-size:12px;color:#9a7a52;font-weight:700;
+                 margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px}
+    .field input{width:100%;background:#1a1008;border:1px solid #3a2810;border-radius:8px;
+                 padding:12px 14px;color:#f5e6c8;font-size:14px;outline:none;transition:border .2s}
+    .field input:focus{border-color:#c8963e}
+    .field input.codigo{font-family:monospace;font-size:16px;letter-spacing:2px;text-transform:uppercase}
+    .alert{background:#5c1a1a;border:1px solid #8b3030;color:#ffaaaa;
+           padding:10px 14px;border-radius:8px;font-size:13px;margin-bottom:16px;display:none}
+    .aviso{background:#1a3a1a;border:1px solid #2e7d32;color:#a5d6a7;
+           padding:10px 14px;border-radius:8px;font-size:13px;margin-bottom:16px;display:none}
+    .btn{width:100%;padding:14px;border-radius:10px;border:none;font-size:15px;font-weight:700;
+         cursor:pointer;background:linear-gradient(135deg,#c8963e,#e8b96a);color:#1a1008;
+         transition:opacity .2s;margin-bottom:12px}
+    .btn:hover{opacity:.88}
+    .btn:disabled{opacity:.5;cursor:not-allowed}
+    .back{display:block;text-align:center;color:#9a7a52;font-size:13px;text-decoration:none;
+          padding:8px;transition:color .2s}
+    .back:hover{color:#f5e6c8}
+    .sep{text-align:center;color:#3a2810;font-size:12px;margin:6px 0}
+  </style>
+</head>
+<body>
+<div class="card">
+  <div class="brand">
+    <div class="brand-icon"><i class="fas fa-key"></i></div>
+    <h1>Recuperar acceso</h1>
+    <p>Ingresa tu usuario y un código de emergencia</p>
+  </div>
+
+  <div class="info-box">
+    <i class="fas fa-circle-info" style="margin-right:6px"></i>
+    Cada código funciona <strong>una sola vez</strong>. Después de ingresar,
+    genera nuevos códigos en <strong>Configuración → Seguridad</strong>.
+  </div>
+
+  <!-- Tabs -->
+  <div style="display:flex;gap:0;margin-bottom:20px;border-radius:8px;overflow:hidden;border:1px solid #3a2810">
+    <button id="tab-codigos" type="button" onclick="setTab('codigos')"
+      style="flex:1;padding:10px;border:none;background:#c8963e;color:#1a1008;font-weight:700;font-size:13px;cursor:pointer">
+      <i class="fas fa-key"></i> Código de emergencia
+    </button>
+    <button id="tab-archivo" type="button" onclick="setTab('archivo')"
+      style="flex:1;padding:10px;border:none;background:#1a1008;color:#9a7a52;font-size:13px;cursor:pointer">
+      <i class="fas fa-file-arrow-up"></i> Archivo de recuperación
+    </button>
+  </div>
+
+  <div class="alert" id="alert"></div>
+  <div class="aviso" id="aviso"></div>
+
+  <!-- Tab: código de emergencia -->
+  <div id="panel-codigos">
+    <div class="field">
+      <label><i class="fas fa-user" style="margin-right:5px"></i>Usuario</label>
+      <input type="text" id="user" placeholder="Tu nombre de usuario" autocomplete="username"/>
+    </div>
+    <div class="field">
+      <label><i class="fas fa-key" style="margin-right:5px"></i>Código de emergencia</label>
+      <input type="text" id="codigo" class="codigo" placeholder="XXXX-XXXX-XXXX"
+             maxlength="14" oninput="formatearCodigo(this)"/>
+    </div>
+    <button class="btn" id="btn" onclick="recuperar()">
+      <span id="btnText"><i class="fas fa-unlock"></i> Recuperar acceso</span>
+    </button>
+  </div>
+
+  <!-- Tab: archivo de recuperación -->
+  <div id="panel-archivo" style="display:none">
+    <div class="field">
+      <label><i class="fas fa-file-arrow-up" style="margin-right:5px"></i>Archivo de recuperación</label>
+      <div id="drop-zone" onclick="document.getElementById('archivo-input').click()"
+        style="border:2px dashed #3a2810;border-radius:10px;padding:30px;text-align:center;
+               cursor:pointer;transition:border .2s;color:#9a7a52;font-size:13px"
+        ondragover="event.preventDefault();this.style.borderColor='#c8963e'"
+        ondragleave="this.style.borderColor='#3a2810'"
+        ondrop="soltar(event)">
+        <i class="fas fa-file-text" style="font-size:28px;margin-bottom:8px;display:block;color:#c8963e"></i>
+        <span id="archivo-nombre">Haz click o arrastra el archivo <strong>arepazo_recovery.txt</strong></span>
+        <input type="file" id="archivo-input" accept=".txt" style="display:none" onchange="seleccionarArchivo(this)"/>
+      </div>
+    </div>
+    <button class="btn" id="btn-archivo" onclick="usarArchivo()" disabled
+      style="opacity:.5">
+      <span id="btnArchivoText"><i class="fas fa-unlock"></i> Usar archivo de recuperación</span>
+    </button>
+  </div>
+
+  <div class="sep">─────────────────</div>
+  <a href="/login" class="back"><i class="fas fa-arrow-left" style="margin-right:6px"></i>Volver al login</a>
+</div>
+
+<script>
+function setTab(tab) {
+  var esCodigos = (tab === 'codigos');
+  document.getElementById('panel-codigos').style.display = esCodigos ? 'block' : 'none';
+  document.getElementById('panel-archivo').style.display = esCodigos ? 'none' : 'block';
+  var tc = document.getElementById('tab-codigos');
+  var ta = document.getElementById('tab-archivo');
+  tc.style.background = esCodigos ? '#c8963e' : '#1a1008';
+  tc.style.color = esCodigos ? '#1a1008' : '#9a7a52';
+  tc.style.fontWeight = esCodigos ? '700' : '400';
+  ta.style.background = esCodigos ? '#1a1008' : '#c8963e';
+  ta.style.color = esCodigos ? '#9a7a52' : '#1a1008';
+  ta.style.fontWeight = esCodigos ? '400' : '700';
+}
+
+let archivoSeleccionado = null;
+
+function seleccionarArchivo(input) {
+  const f = input.files[0];
+  if (!f) return;
+  archivoSeleccionado = f;
+  document.getElementById('archivo-nombre').textContent = '✅ ' + f.name;
+  document.getElementById('drop-zone').style.borderColor = '#c8963e';
+  const btn = document.getElementById('btn-archivo');
+  btn.disabled = false; btn.style.opacity = '1';
+}
+
+function soltar(e) {
+  e.preventDefault();
+  document.getElementById('drop-zone').style.borderColor = '#3a2810';
+  const f = e.dataTransfer.files[0];
+  if (f) {
+    archivoSeleccionado = f;
+    document.getElementById('archivo-nombre').textContent = '✅ ' + f.name;
+    document.getElementById('drop-zone').style.borderColor = '#c8963e';
+    const btn = document.getElementById('btn-archivo');
+    btn.disabled = false; btn.style.opacity = '1';
+  }
+}
+
+async function usarArchivo() {
+  if (!archivoSeleccionado) return;
+  const alertEl = document.getElementById('alert');
+  const avisoEl = document.getElementById('aviso');
+  const btn     = document.getElementById('btn-archivo');
+  const btnText = document.getElementById('btnArchivoText');
+  alertEl.style.display = 'none'; avisoEl.style.display = 'none';
+  btn.disabled = true;
+  btnText.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Verificando...';
+
+  try {
+    const form = new FormData();
+    form.append('archivo', archivoSeleccionado);
+    const res  = await fetch('/api/recovery-file/usar', {method:'POST', body: form});
+    const data = await res.json();
+    if (data.success) {
+      avisoEl.textContent = data.aviso || 'Archivo válido.';
+      avisoEl.style.display = 'block';
+      btnText.innerHTML = '<i class="fas fa-check"></i> Redirigiendo...';
+      setTimeout(() => { window.location.href = data.redirect; }, 1500);
+    } else {
+      alertEl.textContent = data.message || 'Archivo incorrecto.';
+      alertEl.style.display = 'block';
+      btn.disabled = false; btn.style.opacity = '1';
+      btnText.innerHTML = '<i class="fas fa-unlock"></i> Usar archivo de recuperación';
+    }
+  } catch {
+    alertEl.textContent = 'Error de conexión.';
+    alertEl.style.display = 'block';
+    btn.disabled = false; btn.style.opacity = '1';
+    btnText.innerHTML = '<i class="fas fa-unlock"></i> Usar archivo de recuperación';
+  }
+}
+
+function formatearCodigo(input) {
+  let v = input.value.replace(/[^A-Fa-f0-9]/g,'').toUpperCase();
+  if (v.length > 4)  v = v.slice(0,4) + '-' + v.slice(4);
+  if (v.length > 9)  v = v.slice(0,9) + '-' + v.slice(9);
+  input.value = v.slice(0,14);
+}
+
+async function recuperar() {
+  const username = document.getElementById('user').value.trim();
+  const codigo   = document.getElementById('codigo').value.trim();
+  const alertEl  = document.getElementById('alert');
+  const avisoEl  = document.getElementById('aviso');
+  const btn      = document.getElementById('btn');
+  const btnText  = document.getElementById('btnText');
+
+  alertEl.style.display = 'none';
+  avisoEl.style.display = 'none';
+
+  if (!username || !codigo) {
+    alertEl.textContent = 'Completa todos los campos.';
+    alertEl.style.display = 'block';
+    return;
+  }
+  if (codigo.replace(/-/g,'').length !== 12) {
+    alertEl.textContent = 'El código debe tener el formato XXXX-XXXX-XXXX.';
+    alertEl.style.display = 'block';
+    return;
+  }
+
+  btn.disabled = true;
+  btnText.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Verificando...';
+
+  try {
+    const res  = await fetch('/recuperar', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({username, codigo})
+    });
+    const data = await res.json();
+
+    if (data.success) {
+      avisoEl.textContent = data.aviso || 'Acceso recuperado correctamente.';
+      avisoEl.style.display = 'block';
+      btnText.innerHTML = '<i class="fas fa-check"></i> Redirigiendo...';
+      setTimeout(() => { window.location.href = data.redirect; }, 1800);
+    } else {
+      alertEl.textContent = data.message || 'Código o usuario incorrecto.';
+      alertEl.style.display = 'block';
+      btn.disabled = false;
+      btnText.innerHTML = '<i class="fas fa-unlock"></i> Recuperar acceso';
+    }
+  } catch {
+    alertEl.textContent = 'Error de conexión.';
+    alertEl.style.display = 'block';
+    btn.disabled = false;
+    btnText.innerHTML = '<i class="fas fa-unlock"></i> Recuperar acceso';
+  }
+}
+
+// Enter en cualquier campo dispara el botón
+document.addEventListener('keydown', e => {
+  if (e.key === 'Enter') recuperar();
+});
+</script>
+</body>
+</html>

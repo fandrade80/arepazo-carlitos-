@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0"/>
+  <meta name="csrf-token" content="{{ csrf_token() }}"/>
+  <title>Cocina — Arepazo</title>
+  <link href="https://fonts.googleapis.com/css2?family=Lato:wght@400;700;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+    :root{--bg:#0f0a04;--bg2:#1a1008;--bg3:#2a1c0e;--gold:#c8963e;--gold-lt:#e8b96a;
+          --cream:#f5e6c8;--muted:#9a7a52;--green:#6dbf6d;--yellow:#f0c040;--red:#ff7070;--blue:#6db8ff}
+    body{background:var(--bg);font-family:'Lato',sans-serif;color:var(--cream);min-height:100vh}
+    /* HEADER */
+    .header{background:var(--bg2);border-bottom:2px solid var(--gold);padding:14px 20px;
+            display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100}
+    .header h1{font-size:20px;font-weight:900;color:var(--gold-lt);display:flex;align-items:center;gap:10px}
+    .header-right{display:flex;align-items:center;gap:12px}
+    .btn-logout-sm{padding:8px 14px;border-radius:8px;border:1px solid var(--bg3);
+                   background:transparent;color:var(--muted);font-size:13px;cursor:pointer;text-decoration:none}
+    .badge-pendiente{background:#3a1010;color:var(--red);font-size:13px;font-weight:700;
+                     padding:4px 12px;border-radius:20px}
+    /* TABS ESTADO */
+    .estado-tabs{display:flex;gap:0;background:var(--bg2);border-bottom:1px solid var(--bg3);
+                 position:sticky;top:57px;z-index:99}
+    .et{flex:1;padding:14px;text-align:center;font-size:14px;font-weight:700;cursor:pointer;
+        color:var(--muted);border-bottom:3px solid transparent;transition:all .2s}
+    .et.sel{color:var(--cream);border-bottom-color:var(--gold)}
+    /* GRID COMANDAS */
+    .comandas{padding:16px;display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px}
+    .comanda{background:var(--bg2);border:2px solid var(--bg3);border-radius:14px;overflow:hidden;
+             transition:border-color .2s}
+    .comanda.pendiente{border-color:var(--red)}
+    .comanda.en_preparacion{border-color:var(--yellow)}
+    .comanda-header{padding:12px 16px;display:flex;align-items:center;justify-content:space-between;
+                    border-bottom:1px solid var(--bg3)}
+    .c-num{font-size:18px;font-weight:900;color:var(--cream)}
+    .c-tipo{font-size:12px;font-weight:700;padding:3px 10px;border-radius:12px}
+    .c-tipo.mesa{background:#2a1a3a;color:#c06dff}
+    .c-tipo.dom{background:#1a2a3a;color:var(--blue)}
+    .c-hora{font-size:12px;color:var(--muted)}
+    .c-estado-badge{font-size:11px;font-weight:700;padding:3px 10px;border-radius:12px}
+    .c-estado-badge.pendiente{background:#3a1010;color:var(--red)}
+    .c-estado-badge.en_preparacion{background:#3a2e00;color:var(--yellow)}
+    /* Items de la comanda */
+    .comanda-items{padding:14px 16px}
+    .ci-item{display:flex;gap:10px;padding:8px 0;border-bottom:1px solid var(--bg3)}
+    .ci-item:last-child{border-bottom:none}
+    .ci-cant{font-size:20px;font-weight:900;color:var(--gold);min-width:28px;text-align:center}
+    .ci-info{flex:1}
+    .ci-nombre{font-size:15px;font-weight:700;color:var(--cream);line-height:1.2}
+    .ci-adds{font-size:12px;color:var(--gold-lt);margin-top:3px}
+    /* Botón acción grande */
+    .comanda-footer{padding:12px 16px;border-top:1px solid var(--bg3)}
+    .btn-estado{width:100%;padding:14px;border-radius:10px;border:none;font-size:15px;font-weight:900;
+                cursor:pointer;transition:all .2s;display:flex;align-items:center;justify-content:center;gap:10px}
+    .btn-estado.iniciar{background:var(--yellow);color:#1a1000}
+    .btn-estado.lista{background:var(--green);color:#0a1a0a}
+    .btn-estado.iniciar:active,.btn-estado.lista:active{transform:scale(.97)}
+    /* Vacío */
+    .empty-state{text-align:center;padding:60px 20px;color:var(--muted)}
+    .empty-state i{font-size:48px;margin-bottom:16px;display:block}
+    .empty-state p{font-size:16px}
+    /* Botón sonido */
+    .btn-sound{padding:8px 14px;border-radius:8px;border:1px solid var(--bg3);
+               background:transparent;color:var(--muted);font-size:13px;cursor:pointer;
+               display:flex;align-items:center;gap:6px;transition:all .2s}
+    .btn-sound.activo{border-color:var(--gold);color:var(--gold-lt);background:#2a1c0e}
+    /* Selector de tono */
+    .sound-panel{display:none;position:absolute;top:56px;right:16px;
+                 background:var(--bg2);border:1px solid var(--bg3);border-radius:12px;
+                 padding:16px;z-index:150;min-width:220px;box-shadow:0 8px 24px rgba(0,0,0,.5)}
+    .sound-panel.open{display:block}
+    .sp-title{font-size:11px;color:var(--muted);font-weight:700;margin-bottom:10px}
+    .sp-tono{display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:8px;
+             cursor:pointer;font-size:13px;color:var(--cream);transition:background .15s}
+    .sp-tono:hover{background:var(--bg3)}
+    .sp-tono.sel{background:var(--bg3);color:var(--gold-lt)}
+    .sp-tono i{width:16px;text-align:center;color:var(--gold)}
+    .sp-vol{margin-top:12px}
+    .sp-vol label{font-size:11px;color:var(--muted);font-weight:700;display:block;margin-bottom:6px}
+    .sp-vol input{width:100%;accent-color:var(--gold)}
+    /* Notificación nueva orden */
+    .notif{position:fixed;top:70px;right:16px;background:var(--red);color:#fff;
+           border-radius:10px;padding:12px 20px;font-size:14px;font-weight:700;
+           z-index:200;transform:translateX(120%);transition:transform .3s}
+    .notif.show{transform:translateX(0)}
+  </style>
+</head>
+<body>
+<div class="notif" id="notif"><i class="fas fa-bell"></i> ¡Nueva orden!</div>
+
+<div class="header">
+  <h1><i class="fas fa-fire"></i> Cocina</h1>
+  <div class="header-right" style="position:relative">
+    <span class="badge-pendiente" id="badgePendiente">0 pendientes</span>
+    <!-- Ítem 64 — Botón sonido -->
+    <button class="btn-sound" id="btnSonido" onclick="togglePanelSonido()" title="Configurar sonido">
+      <i class="fas fa-volume-xmark" id="iconSonido"></i>
+      <span id="labelSonido">Sonido</span>
+    </button>
+    <!-- Panel de configuración -->
+    <div class="sound-panel" id="panelSonido">
+      <div class="sp-title">TONO DE ALERTA</div>
+      <div class="sp-tono sel" id="tono-campana" onclick="selTono('campana',this)">
+        <i class="fas fa-bell"></i> Campana
+      </div>
+      <div class="sp-tono" id="tono-doble" onclick="selTono('doble',this)">
+        <i class="fas fa-bell"></i> Doble tono
+      </div>
+      <div class="sp-tono" id="tono-urgente" onclick="selTono('urgente',this)">
+        <i class="fas fa-triangle-exclamation"></i> Urgente
+      </div>
+      <div class="sp-tono" id="tono-suave" onclick="selTono('suave',this)">
+        <i class="fas fa-music"></i> Suave
+      </div>
+      <div class="sp-vol">
+        <label>VOLUMEN</label>
+        <input type="range" id="volSlider" min="0" max="1" step="0.1" value="0.7"
+               oninput="setVolumen(this.value)"/>
+      </div>
+      <div style="margin-top:10px">
+        <button onclick="probarSonido()" style="width:100%;padding:8px;border-radius:8px;
+          border:1px solid var(--bg3);background:var(--bg3);color:var(--cream);
+          cursor:pointer;font-size:12px">
+          <i class="fas fa-play"></i> Probar
+        </button>
+      </div>
+    </div>
+    <a href="/logout" class="btn-logout-sm"><i class="fas fa-sign-out-alt"></i></a>
+  </div>
+</div>
+
+<div class="estado-tabs">
+  <div class="et sel" onclick="setFiltro('todos',this)">Todas</div>
+  <div class="et" onclick="setFiltro('pendiente',this)">Pendientes</div>
+  <div class="et" onclick="setFiltro('en_preparacion',this)">En preparación</div>
+</div>
+
+<div class="comandas" id="comandas">
+  <div class="empty-state"><i class="fas fa-spinner fa-spin"></i><p>Cargando…</p></div>
+</div>
+
+<script>
+const CSRF_TOKEN = document.querySelector('meta[name="csrf-token"]')?.content || '';
+async function csrfFetch(url, options = {}) {
+  const method = (options.method || 'GET').toUpperCase();
+  if (['POST','PUT','DELETE'].includes(method)) {
+    options.headers = Object.assign({}, options.headers, {'X-CSRF-Token': CSRF_TOKEN});
+  }
+  return fetch(url, options);
+}
+
+// ── Ítem 64 — Sistema de sonido con Web Audio API ─────────────────────────────
+let audioCtx    = null;
+let sonidoOn    = localStorage.getItem('cocina_sonido') !== 'off';
+let tonoActual  = localStorage.getItem('cocina_tono')   || 'campana';
+let volumen     = parseFloat(localStorage.getItem('cocina_vol') || '0.7');
+
+function getAudioCtx() {
+  if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  return audioCtx;
+}
+
+// Generadores de tonos con Web Audio API pura (sin archivos externos)
+const TONOS = {
+  campana: (ctx, vol) => {
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.connect(gain); gain.connect(ctx.destination);
+    osc.type = 'sine'; osc.frequency.setValueAtTime(880, ctx.currentTime);
+    osc.frequency.exponentialRampToValueAtTime(440, ctx.currentTime + 0.5);
+    gain.gain.setValueAtTime(vol, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.8);
+    osc.start(); osc.stop(ctx.currentTime + 0.8);
+  },
+  doble: (ctx, vol) => {
+    [0, 0.35].forEach(delay => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.connect(gain); gain.connect(ctx.destination);
+      osc.type = 'triangle'; osc.frequency.value = 660;
+      gain.gain.setValueAtTime(0, ctx.currentTime + delay);
+      gain.gain.linearRampToValueAtTime(vol, ctx.currentTime + delay + 0.05);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + delay + 0.3);
+      osc.start(ctx.currentTime + delay);
+      osc.stop(ctx.currentTime + delay + 0.35);
+    });
+  },
+  urgente: (ctx, vol) => {
+    [0, 0.2, 0.4].forEach((delay, i) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.connect(gain); gain.connect(ctx.destination);
+      osc.type = 'square'; osc.frequency.value = i % 2 === 0 ? 880 : 660;
+      gain.gain.setValueAtTime(vol * 0.6, ctx.currentTime + delay);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + delay + 0.18);
+      osc.start(ctx.currentTime + delay);
+      osc.stop(ctx.currentTime + delay + 0.2);
+    });
+  },
+  suave: (ctx, vol) => {
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.connect(gain); gain.connect(ctx.destination);
+    osc.type = 'sine'; osc.frequency.value = 523;
+    gain.gain.setValueAtTime(0, ctx.currentTime);
+    gain.gain.linearRampToValueAtTime(vol * 0.5, ctx.currentTime + 0.1);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 1.2);
+    osc.start(); osc.stop(ctx.currentTime + 1.3);
+  },
+};
+
+function reproducirAlerta() {
+  if (!sonidoOn) return;
+  try {
+    const ctx = getAudioCtx();
+    if (ctx.state === 'suspended') ctx.resume();
+    (TONOS[tonoActual] || TONOS.campana)(ctx, volumen);
+  } catch(e) {}
+}
+
+function probarSonido() { reproducirAlerta(); }
+
+function togglePanelSonido() {
+  // Primer click activa el AudioContext (requerido por navegadores)
+  getAudioCtx();
+  document.getElementById('panelSonido').classList.toggle('open');
+}
+
+// Cerrar panel al hacer click fuera
+document.addEventListener('click', e => {
+  const panel = document.getElementById('panelSonido');
+  const btn   = document.getElementById('btnSonido');
+  if (panel && !panel.contains(e.target) && !btn.contains(e.target)) {
+    panel.classList.remove('open');
+  }
+});
+
+function selTono(tono, el) {
+  tonoActual = tono;
+  localStorage.setItem('cocina_tono', tono);
+  document.querySelectorAll('.sp-tono').forEach(t => t.classList.remove('sel'));
+  el.classList.add('sel');
+  reproducirAlerta(); // Preview al seleccionar
+}
+
+function setVolumen(val) {
+  volumen = parseFloat(val);
+  localStorage.setItem('cocina_vol', volumen);
+}
+
+function actualizarUIsonido() {
+  const btn   = document.getElementById('btnSonido');
+  const icon  = document.getElementById('iconSonido');
+  const label = document.getElementById('labelSonido');
+  if (sonidoOn) {
+    btn.classList.add('activo');
+    icon.className  = 'fas fa-volume-high';
+    label.textContent = 'Sonido ON';
+  } else {
+    btn.classList.remove('activo');
+    icon.className  = 'fas fa-volume-xmark';
+    label.textContent = 'Sonido';
+  }
+}
+
+// Toggle ON/OFF al hacer click en el label (no en el botón entero que abre panel)
+document.getElementById('labelSonido').addEventListener('click', e => {
+  e.stopPropagation();
+  sonidoOn = !sonidoOn;
+  localStorage.setItem('cocina_sonido', sonidoOn ? 'on' : 'off');
+  actualizarUIsonido();
+});
+
+// Restaurar tono seleccionado y volumen al cargar
+document.addEventListener('DOMContentLoaded', () => {
+  actualizarUIsonido();
+  const tonoEl = document.getElementById('tono-' + tonoActual);
+  if (tonoEl) {
+    document.querySelectorAll('.sp-tono').forEach(t => t.classList.remove('sel'));
+    tonoEl.classList.add('sel');
+  }
+  document.getElementById('volSlider').value = volumen;
+});
+
+// ── Órdenes ───────────────────────────────────────────────────────────────────
+let todasOrdenes = [];
+let filtroActual = 'todos';
+let ultimoId     = 0;
+
+function setFiltro(f, btn){
+  filtroActual = f;
+  document.querySelectorAll('.et').forEach(b=>b.classList.remove('sel'));
+  btn.classList.add('sel');
+  renderComandas();
+}
+
+async function cargarOrdenes(){
+  try{
+    const res  = await csrfFetch('/api/ordenes/cocina');
+    const data = await res.json();
+    if(!data.success) return;
+
+    const ids    = data.ordenes.map(o=>o.id);
+    const nuevas = ids.filter(id=>id>ultimoId && ultimoId>0);
+    if(nuevas.length){
+      mostrarNotif();
+      reproducirAlerta();  // Ítem 64 — reproducir sonido
+    }
+    if(ids.length) ultimoId = Math.max(...ids, ultimoId);
+
+    todasOrdenes = data.ordenes;
+    renderComandas();
+    actualizarBadge();
+  }catch{}
+}
+
+function renderComandas(){
+  const lista = filtroActual==='todos'
+    ? todasOrdenes
+    : todasOrdenes.filter(o=>o.estado===filtroActual);
+
+  if(!lista.length){
+    document.getElementById('comandas').innerHTML =
+      `<div class="empty-state"><i class="fas fa-check-circle" style="color:var(--green)"></i>
+       <p>${filtroActual==='pendiente'?'Sin pedidos pendientes':'Todo al día'}</p></div>`;
+    return;
+  }
+
+  document.getElementById('comandas').innerHTML = lista.map(o=>{
+    const items = o.items.map(it=>{
+      const adds = (it.adicionales||[]).map(a=>a.n).join(', ');
+      const cant = it.cantidad||1;
+      return `<div class="ci-item">
+        <div class="ci-cant">${cant}</div>
+        <div class="ci-info">
+          <div class="ci-nombre">${it.nombre}</div>
+          ${adds?`<div class="ci-adds">+ ${adds}</div>`:''}
+        </div>
+      </div>`;
+    }).join('');
+
+    const esPendiente = o.estado==='pendiente';
+    const btnLabel = esPendiente
+      ? '<i class="fas fa-fire"></i> Iniciar preparación'
+      : '<i class="fas fa-check"></i> Marcar como lista';
+    const btnClass    = esPendiente ? 'iniciar' : 'lista';
+    const nuevoEstado = esPendiente ? 'en_preparacion' : 'lista';
+
+    return `<div class="comanda ${o.estado}">
+      <div class="comanda-header">
+        <div>
+          <div class="c-num">Orden #${o.id}</div>
+          <div class="c-hora">🕐 ${o.created_at}</div>
+        </div>
+        <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px">
+          <span class="c-tipo ${o.tipo==='domicilio'?'dom':'mesa'}">${o.tipo==='domicilio'?'🛵 Domicilio':'🍽️ Mesa'}</span>
+          <span class="c-estado-badge ${o.estado}">${o.estado.replace('_',' ')}</span>
+        </div>
+      </div>
+      <div class="comanda-items">${items}</div>
+      <div class="comanda-footer">
+        <button class="btn-estado ${btnClass}" onclick="cambiarEstado(${o.id},'${nuevoEstado}',this)">
+          ${btnLabel}
+        </button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function actualizarBadge(){
+  const n = todasOrdenes.filter(o=>o.estado==='pendiente').length;
+  document.getElementById('badgePendiente').textContent = `${n} pendiente${n!==1?'s':''}`;
+}
+
+async function cambiarEstado(oid, estado, btn){
+  btn.disabled = true;
+  btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+  try{
+    const res  = await csrfFetch(`/api/ordenes/${oid}/estado`,{
+      method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({estado})
+    });
+    const data = await res.json();
+    if(data.success) cargarOrdenes();
+    else{ btn.disabled=false; btn.innerHTML='Error — reintentar'; }
+  }catch{ btn.disabled=false; }
+}
+
+function mostrarNotif(){
+  const n = document.getElementById('notif');
+  n.classList.add('show');
+  if(navigator.vibrate) navigator.vibrate([200,100,200]);
+  setTimeout(()=>n.classList.remove('show'), 3000);
+}
+
+cargarOrdenes();
+setInterval(cargarOrdenes, 8000);
+</script>
+</body>
+</html>

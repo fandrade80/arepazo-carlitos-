@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0"/>
+  <meta name="csrf-token" content="{{ csrf_token() }}"/>
+  <title>Repartidor — Arepazo</title>
+  <link href="https://fonts.googleapis.com/css2?family=Lato:wght@400;700;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+    :root{--bg:#04080f;--bg2:#08101a;--bg3:#0e1c2a;--blue:#6db8ff;--blue-lt:#a8d4ff;
+          --cream:#e8f0f8;--muted:#5a7a9a;--green:#6dbf6d;--yellow:#f0c040;--red:#ff7070}
+    body{background:var(--bg);font-family:'Lato',sans-serif;color:var(--cream);min-height:100vh}
+    .header{background:var(--bg2);border-bottom:2px solid var(--blue);padding:14px 20px;
+            display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100}
+    .header h1{font-size:20px;font-weight:900;color:var(--blue-lt);display:flex;align-items:center;gap:10px}
+    .btn-logout-sm{padding:8px 14px;border-radius:8px;border:1px solid var(--bg3);
+                   background:transparent;color:var(--muted);font-size:13px;cursor:pointer;text-decoration:none}
+    .estado-tabs{display:flex;gap:0;background:var(--bg2);border-bottom:1px solid var(--bg3);
+                 position:sticky;top:57px;z-index:99}
+    .et{flex:1;padding:14px;text-align:center;font-size:14px;font-weight:700;cursor:pointer;
+        color:var(--muted);border-bottom:3px solid transparent;transition:all .2s}
+    .et.sel{color:var(--cream);border-bottom-color:var(--blue)}
+    .domicilios{padding:16px;display:flex;flex-direction:column;gap:14px}
+    .domcard{background:var(--bg2);border:2px solid var(--bg3);border-radius:14px;overflow:hidden;transition:border-color .2s}
+    .domcard.lista{border-color:var(--green)}
+    .domcard.en_camino{border-color:var(--blue)}
+    .domcard-header{padding:14px 16px;background:var(--bg3);display:flex;align-items:center;justify-content:space-between}
+    .dc-num{font-size:18px;font-weight:900;color:var(--cream)}
+    .dc-hora{font-size:12px;color:var(--muted);margin-top:2px}
+    .dc-estado{font-size:11px;font-weight:700;padding:4px 10px;border-radius:12px}
+    .dc-estado.lista{background:#1a3a1a;color:var(--green)}
+    .dc-estado.en_camino{background:#1a2a3a;color:var(--blue)}
+    .domcard-dir{padding:14px 16px;border-bottom:1px solid var(--bg3)}
+    .dir-label{font-size:11px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px}
+    .dir-val{font-size:16px;font-weight:700;color:var(--cream);line-height:1.3}
+    .dir-nombre{font-size:13px;color:var(--blue-lt);margin-top:4px}
+    .domcard-items{padding:12px 16px;border-bottom:1px solid var(--bg3)}
+    .di-item{font-size:13px;color:var(--muted);padding:3px 0;display:flex;gap:8px}
+    .di-cant{font-weight:700;color:var(--cream);min-width:20px}
+    .domcard-total{padding:12px 16px;border-bottom:1px solid var(--bg3);
+                   display:flex;justify-content:space-between;align-items:center}
+    .dt-label{font-size:12px;color:var(--muted)}
+    .dt-val{font-size:22px;font-weight:900;color:var(--yellow)}
+    .domcard-footer{padding:12px 16px}
+    .btn-dom{width:100%;padding:14px;border-radius:10px;border:none;font-size:15px;font-weight:900;
+             cursor:pointer;transition:all .2s;display:flex;align-items:center;justify-content:center;gap:10px}
+    .btn-dom.camino{background:var(--blue);color:#001020}
+    .btn-dom.entregado{background:var(--green);color:#001a00}
+    .btn-dom:active{transform:scale(.97)}
+    .empty-state{text-align:center;padding:60px 20px;color:var(--muted)}
+    .empty-state i{font-size:48px;margin-bottom:16px;display:block}
+    .empty-state p{font-size:16px}
+    @media(min-width:600px){.domicilios{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr))}}
+  </style>
+</head>
+<body>
+<div class="header">
+  <h1><i class="fas fa-motorcycle"></i> Domicilios</h1>
+  <a href="/logout" class="btn-logout-sm"><i class="fas fa-sign-out-alt"></i></a>
+</div>
+
+<div class="estado-tabs">
+  <div class="et sel" onclick="setFiltro('todos',this)">Todos</div>
+  <div class="et" onclick="setFiltro('lista',this)">Listos</div>
+  <div class="et" onclick="setFiltro('en_camino',this)">En camino</div>
+</div>
+
+<div class="domicilios" id="domicilios">
+  <div class="empty-state"><i class="fas fa-spinner fa-spin"></i><p>Cargando…</p></div>
+</div>
+
+<script>
+const CSRF_TOKEN = document.querySelector('meta[name="csrf-token"]')?.content || '';
+async function csrfFetch(url, options = {}) {
+  const method = (options.method || 'GET').toUpperCase();
+  if (['POST','PUT','DELETE'].includes(method)) {
+    options.headers = Object.assign({}, options.headers, {'X-CSRF-Token': CSRF_TOKEN});
+  }
+  return fetch(url, options);
+}
+let todasOrdenes = [];
+let filtroActual = 'todos';
+
+function setFiltro(f, btn){
+  filtroActual = f;
+  document.querySelectorAll('.et').forEach(b=>b.classList.remove('sel'));
+  btn.classList.add('sel');
+  renderDomicilios();
+}
+
+const fmt = n => '$'+parseInt(n).toLocaleString('es-CO');
+
+async function cargarOrdenes(){
+  try{
+    const res  = await csrfFetch('/api/ordenes/repartidor');
+    const data = await res.json();
+    if(data.success){ todasOrdenes=data.ordenes; renderDomicilios(); }
+  }catch{}
+}
+
+function renderDomicilios(){
+  const lista = filtroActual==='todos'
+    ? todasOrdenes
+    : todasOrdenes.filter(o=>o.estado===filtroActual);
+
+  if(!lista.length){
+    document.getElementById('domicilios').innerHTML =
+      `<div class="empty-state"><i class="fas fa-check-circle" style="color:var(--green)"></i>
+       <p>Sin domicilios ${filtroActual==='en_camino'?'en camino':'pendientes'}</p></div>`;
+    return;
+  }
+
+  document.getElementById('domicilios').innerHTML = lista.map(o=>{
+    const items = o.items.map(it=>{
+      const cant = it.cantidad||1;
+      return `<div class="di-item"><span class="di-cant">${cant}×</span><span>${it.nombre}</span></div>`;
+    }).join('');
+
+    const esLista = o.estado==='lista';
+    const btnLabel = esLista
+      ? '<i class="fas fa-motorcycle"></i> Salir a entregar'
+      : '<i class="fas fa-check"></i> Marcar como entregada';
+    const btnClass = esLista ? 'camino' : 'entregado';
+    const nuevoEstado = esLista ? 'en_camino' : 'entregada';
+    // Ítem 47 — selector de forma de pago al confirmar entrega
+    const confirmPago = !esLista
+      ? `<div style="padding:10px 16px;background:var(--bg3);border-bottom:1px solid var(--bg)">
+          <div style="font-size:11px;color:var(--muted);font-weight:700;margin-bottom:6px">CONFIRMAR FORMA DE PAGO</div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
+            ${['efectivo','nequi','daviplata'].map(fp=>
+              `<label style="display:flex;align-items:center;gap:5px;font-size:13px;cursor:pointer">
+                <input type="radio" name="pago_${o.id}" value="${fp}" ${fp==='efectivo'?'checked':''}/> ${fp}
+              </label>`
+            ).join('')}
+          </div>
+        </div>`
+      : '';
+
+    return `<div class="domcard ${o.estado}">
+      <div class="domcard-header">
+        <div>
+          <div class="dc-num">Orden #${o.id}</div>
+          <div class="dc-hora">🕐 ${o.created_at}</div>
+        </div>
+        <span class="dc-estado ${o.estado}">${o.estado==='lista'?'✓ Lista':'🛵 En camino'}</span>
+      </div>
+      <div class="domcard-dir">
+        <div class="dir-label">Dirección</div>
+        <div class="dir-val">📍 ${o.direccion||'No especificada'}</div>
+        ${o.nombre_cliente?`<div class="dir-nombre">👤 ${o.nombre_cliente}</div>`:''}
+      </div>
+      <div class="domcard-items">${items}</div>
+      <div class="domcard-total">
+        <span class="dt-label">Total a cobrar</span>
+        <span class="dt-val">${fmt(o.total)}</span>
+      </div>
+      ${o.costo_domicilio>0?`<div style="padding:6px 16px;background:var(--bg3);display:flex;justify-content:space-between;font-size:12px">
+        <span style="color:var(--muted)">Subtotal productos</span>
+        <span>${fmt(o.total - o.costo_domicilio)}</span>
+      </div>
+      <div style="padding:6px 16px;background:var(--bg3);display:flex;justify-content:space-between;font-size:12px;border-bottom:1px solid var(--bg)">
+        <span style="color:var(--muted)">Costo domicilio</span>
+        <span style="color:var(--yellow)">${fmt(o.costo_domicilio)}</span>
+      </div>`:''}
+      ${confirmPago}
+      <div class="domcard-footer">
+        <button class="btn-dom ${btnClass}" onclick="cambiarEstado(${o.id},'${nuevoEstado}',this)">
+          ${btnLabel}
+        </button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+async function cambiarEstado(oid, estado, btn){
+  btn.disabled = true;
+  btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+  try{
+    const res  = await csrfFetch(`/api/ordenes/${oid}/estado`,{
+      method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({estado})
+    });
+    const data = await res.json();
+    if(data.success) cargarOrdenes();
+    else{ btn.disabled=false; btn.innerHTML='Error'; }
+  }catch{ btn.disabled=false; }
+}
+
+cargarOrdenes();
+setInterval(cargarOrdenes, 10000);
+</script>
+</body>
+</html>
