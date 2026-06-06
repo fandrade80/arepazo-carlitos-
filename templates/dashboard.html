@@ -2780,6 +2780,7 @@
       const wm = document.getElementById('cfg-wa-mensaje');
       if (wn) wn.value = cfgActual.whatsapp_numero  || '3003830842';
       if (wm) wm.value = cfgActual.whatsapp_mensaje || '¡Hola Arepazo de Carlitos! Quiero reservar un cumpleaños 🎂';
+      const d1 = document.getElementById('cfg-dom-1');
       const d2 = document.getElementById('cfg-dom-2');
       const d3 = document.getElementById('cfg-dom-3');
       if (d1) d1.value = cfgActual.dom_precio_1  || '3000';
@@ -2820,6 +2821,7 @@
       showToast('✅ WhatsApp actualizado','ok');
     } catch { showToast('Error al guardar','err'); }
   }
+  async function guardarPreciosDomicilio() {
     const p1 = document.getElementById('cfg-dom-1').value;
     const p2 = document.getElementById('cfg-dom-2').value;
     const p3 = document.getElementById('cfg-dom-3').value;
