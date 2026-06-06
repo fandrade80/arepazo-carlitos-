@@ -820,9 +820,9 @@
       const data = await res.json();
       if (!data.success) throw new Error('no success');
 
-      const platos  = parseInt(data.total_productos) || 0;
-      const ordenes = parseInt(data.total_ordenes)   || 0;
-      const mes     = parseInt(data.ordenes_mes)     || 0;
+      const platos  = Number(data.total_productos) || 0;
+      const ordenes = Number(data.total_ordenes)   || 0;
+      const mes     = Number(data.ordenes_mes)     || 0;
 
       // Verificar que son números válidos
       if (isNaN(platos) && isNaN(ordenes)) throw new Error('NaN');
@@ -978,7 +978,7 @@
 
   async function cargarMenuModal() {
     try {
-      const res  = await fetch('/api/productos');
+      const res  = await fetch('/api/menu-publico');
       const data = await res.json();
       if (data.success) {
         menuModalData = data.productos.filter(p => p.disponible);

@@ -738,6 +738,24 @@ def dashboard_productos():
     return render_template('dashboard.html', section='productos')
 
 
+@app.route('/api/menu-publico', methods=['GET'])
+def api_menu_publico():
+    """Menú público para la homepage — sin autenticación."""
+    try:
+        db = get_db()
+        with db.cursor() as cur:
+            cur.execute("""
+                SELECT id, nombre, descripcion, precio, categoria, imagen
+                FROM productos
+                WHERE disponible=1
+                ORDER BY categoria, orden, id
+            """)
+            rows = cur.fetchall()
+        db.close()
+        return jsonify(success=True, productos=rows)
+    except Exception as e:
+        return jsonify(success=False, message=str(e)), 500
+
 @app.route('/api/productos', methods=['GET'])
 @login_required
 def api_listar_productos():
