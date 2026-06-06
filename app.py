@@ -2019,7 +2019,7 @@ def api_historial_caja():
                 cur.execute("""
                     SELECT forma_pago, COUNT(*) AS cant, COALESCE(SUM(total),0) AS suma
                     FROM ordenes
-                    WHERE DATE(created_at)=%s AND (activa=1 OR estado='entregada')
+                    WHERE DATE(created_at)=%s AND activa=1
                     GROUP BY forma_pago
                 """, (fecha,))
                 r['desglose_pagos'] = {p['forma_pago']: {'cant': p['cant'], 'suma': int(p['suma'])} for p in cur.fetchall()}
@@ -2053,10 +2053,10 @@ def api_analytics_resumen():
                 'año':    'DATE(created_at) >= DATE_SUB(CURDATE(), INTERVAL 365 DAY)',
             }
             where = rangos.get(periodo, rangos['mes'])
-            base  = f"FROM ordenes WHERE {where} AND (activa=1 OR estado='entregada')"
+            base  = f"FROM ordenes WHERE {where} AND activa=1"
 
             # KPIs principales
-            cur.execute(f"SELECT COUNT(*) AS n, COALESCE(SUM(total),0) AS bruto, COALESCE(AVG(total),0) AS ticket FROM ordenes WHERE {where} AND (activa=1 OR estado='entregada')")
+            cur.execute(f"SELECT COUNT(*) AS n, COALESCE(SUM(total),0) AS bruto, COALESCE(AVG(total),0) AS ticket FROM ordenes WHERE {where} AND activa=1")
             kpis = cur.fetchone()
 
             # Ventas por día (para gráfico de línea)
@@ -2073,7 +2073,7 @@ def api_analytics_resumen():
                        SUM(CAST(JSON_UNQUOTE(JSON_EXTRACT(item.value,'$.cantidad')) AS UNSIGNED)) AS uds,
                        SUM(CAST(JSON_UNQUOTE(JSON_EXTRACT(item.value,'$.total_item')) AS UNSIGNED)) AS ingresos
                 FROM ordenes, JSON_TABLE(items,'$[*]' COLUMNS(value JSON PATH '$')) AS item
-                WHERE {where} AND (activa=1 OR estado='entregada')
+                WHERE {where} AND activa=1
                 GROUP BY nombre ORDER BY uds DESC LIMIT 10
             """)
             top_productos = cur.fetchall()
@@ -2120,7 +2120,7 @@ def api_analytics_resumen():
                 'mes':    'DATE(created_at) >= DATE_SUB(CURDATE(),INTERVAL 60 DAY) AND DATE(created_at) < DATE_SUB(CURDATE(),INTERVAL 30 DAY)',
                 'año':    'DATE(created_at) >= DATE_SUB(CURDATE(),INTERVAL 730 DAY) AND DATE(created_at) < DATE_SUB(CURDATE(),INTERVAL 365 DAY)',
             }
-            cur.execute(f"SELECT COALESCE(SUM(total),0) AS bruto FROM ordenes WHERE {comp_rangos.get(periodo,comp_rangos['mes'])} AND (activa=1 OR estado='entregada')")
+            cur.execute(f"SELECT COALESCE(SUM(total),0) AS bruto FROM ordenes WHERE {comp_rangos.get(periodo,comp_rangos['mes'])} AND activa=1")
             anterior = cur.fetchone()
 
         db.close()
@@ -2218,12 +2218,13 @@ def api_chat_ia():
 
     fecha_hoy = datetime.now().strftime('%d/%m/%Y %H:%M')
 
-    system_prompt = f"""Eres el asistente inteligente del restaurante "Arepazo de Carlitos" (Girardot, Colombia).
+    system_prompt = f"""Eres el asistente del restaurante "Arepazo de Carlitos" (Girardot, Colombia).
 Fecha y hora actual: {fecha_hoy}
 Contexto del negocio hoy: {_json.dumps(ctx, ensure_ascii=False)}
 
 ESQUEMA DE LA BASE DE DATOS:
-- ordenes(id, tipo[mesa|domicilio], estado[pendiente|en_preparacion|lista|en_camino|entregada], forma_pago[efectivo|nequi|daviplata], total, subtotal, costo_domicilio, nombre_cliente, direccion, items JSON, activa[0|1], created_at)
+- ordenes(id, tipo[mesa|domicilio], estado[pendiente|en_preparacion|lista|en_camino|entregada], forma_pago[efectivo|nequi|daviplata], total, subtotal, costo_domicilio, nombre_cliente, direccion, items JSON, activa[0=anulada|1=activa], created_at)
+  IMPORTANTE: activa=0 puede ser orden entregada (estado='entregada') o anulada. No confundir.
 - insumos(id, nombre, stock_actual, stock_minimo, unidad, costo_unitario, activo)
 - productos(id, nombre, precio, categoria, descripcion, disponible)
 - gastos(id, fecha, categoria[agua|luz|gas|insumos|bebidas|personal|otros], descripcion, monto, created_at)
@@ -2231,12 +2232,28 @@ ESQUEMA DE LA BASE DE DATOS:
 - usuarios(id, username, role[admin|cajero|mesero|cocina|repartidor])
 - audit_log(id, username, modulo, accion, resultado, created_at)
 
-CÓMO RESPONDER:
-1. Conversación normal → responde en texto claro y directo en español.
-2. Para CONSULTAR datos de la BD que no están en el contexto → responde SOLO con JSON:
-   {{"tipo":"select","sql":"SELECT ...","descripcion":"lo que quieres consultar"}}
+REGLA CRÍTICA SOBRE ÓRDENES:
+- Órdenes activas en proceso: activa=1
+- Órdenes entregadas (completadas): estado='entregada' (tienen activa=0, esto es NORMAL)
+- Órdenes anuladas: activa=0 AND estado != 'entregada'
+- Para contar ventas reales: WHERE estado='entregada'
+- Para contar anuladas: WHERE activa=0 AND estado != 'entregada'
+- NUNCA interpretes activa=0 como problema si estado='entregada'
+
+FORMATO DE RESPUESTA — MUY IMPORTANTE:
+- Responde siempre en español, de forma BREVE y DIRECTA
+- Máximo 4-5 líneas de texto conversacional
+- USA SOLO estos caracteres especiales: ✅ ⚠️ 📊 💰 — no uses ** ni ## ni ---
+- Si son datos: preséntalo en máximo 3-4 líneas simples, ej: "Hoy: 5 órdenes · $92.000 en ventas"
+- No hagas análisis extensos ni recomendaciones a menos que te lo pidan explícitamente
+- Sé directo: si preguntan cuánto vendieron, solo di el número
+
+CÓMO OPERAR:
+1. Conversación normal → responde en texto corto y directo
+2. Para CONSULTAR datos no disponibles en el contexto → responde SOLO con JSON:
+   {{"tipo":"select","sql":"SELECT ...","descripcion":"qué consultas"}}
 3. Para MODIFICAR datos → responde SOLO con JSON:
-   {{"tipo":"mod","sql":"INSERT/UPDATE/DELETE...","descripcion":"qué cambio harás exactamente","impacto":"qué consecuencia tiene"}}
+   {{"tipo":"mod","sql":"UPDATE/INSERT/DELETE...","descripcion":"qué cambio harás","impacto":"consecuencia"}}
 
 PERMISOS DE MODIFICACIÓN (solo estos):
 - gastos: INSERT, UPDATE, DELETE
@@ -2245,16 +2262,15 @@ PERMISOS DE MODIFICACIÓN (solo estos):
 - productos: UPDATE precio, disponible, descripcion
 
 PROHIBIDO: DROP, TRUNCATE, ALTER, modificar usuarios/caja/audit_log, DELETE de órdenes/insumos/productos.
-
-Si el usuario pide algo riesgoso o fuera del alcance, explícalo brevemente."""
+Si piden algo fuera del alcance, dilo en una sola línea corta."""
 
     if not ANTHROPIC_API_KEY:
         return jsonify(success=False, message='ANTHROPIC_API_KEY no configurada.'), 503
 
     # Modo prueba: sin límites de tokens ni restricciones de tablas
     modo_prueba = get_config('chat_ia_modo_prueba', '0') == '1'
-    max_tokens_cfg  = 4096 if modo_prueba else 600
-    max_historial   = 30   if modo_prueba else 10
+    max_tokens_cfg  = 4096 if modo_prueba else 400
+    max_historial   = 30   if modo_prueba else 8
 
     if modo_prueba:
         system_prompt = system_prompt.replace(
