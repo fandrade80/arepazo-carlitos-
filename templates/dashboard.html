@@ -5018,7 +5018,7 @@ async function cargarHistorialOrdenes(){
     if(!data.success){ tbody.innerHTML='<tr><td colspan="7" style="text-align:center;color:var(--red-lt);padding:20px">Error al cargar</td></tr>'; return; }
 
     // Stats resumen — Ítem 51: incluye info de paginación
-    const totalPesos = data.ordenes.filter(o=>o.activa).reduce((s,o)=>s+o.total,0);
+    const totalPesos = data.ordenes.filter(o=>o.activa || o.estado==='entregada').reduce((s,o)=>s+o.total,0);
     const nMesa = data.ordenes.filter(o=>o.tipo==='mesa').length;
     const nDom  = data.ordenes.filter(o=>o.tipo==='domicilio').length;
     const desde = (data.pagina - 1) * data.por_pag + 1;
@@ -5038,8 +5038,9 @@ async function cargarHistorialOrdenes(){
 
     tbody.innerHTML = data.ordenes.map(o=>{
       const items = o.items.map(it=>`${it.cantidad||1}× ${it.nombre}`).join(', ');
-      return `<tr class="${!o.activa?'hist-anulada':''}">
-        <td><strong style="color:var(--cream)">#${o.id}</strong>${!o.activa?'<br><span style="font-size:10px;color:var(--red-lt)">anulada</span>':''}</td>
+      const esAnulada = !o.activa && o.estado !== 'entregada';
+      return `<tr class="${esAnulada?'hist-anulada':''}">
+        <td><strong style="color:var(--cream)">#${o.id}</strong>${esAnulada?'<br><span style="font-size:10px;color:var(--red-lt)">anulada</span>':''}</td>
         <td style="color:var(--muted);white-space:nowrap">${o.created_at}</td>
         <td><span class="tipo-badge ${o.tipo==='domicilio'?'dom':'mesa'}">${o.tipo==='domicilio'?'🛵':'🍽️'} ${o.tipo}</span></td>
         <td><span class="est-badge ${o.estado}">${o.estado.replace('_',' ')}</span></td>

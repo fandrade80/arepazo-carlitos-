@@ -2019,7 +2019,7 @@ def api_historial_caja():
                 cur.execute("""
                     SELECT forma_pago, COUNT(*) AS cant, COALESCE(SUM(total),0) AS suma
                     FROM ordenes
-                    WHERE DATE(created_at)=%s AND activa=1
+                    WHERE DATE(created_at)=%s AND (activa=1 OR estado='entregada')
                     GROUP BY forma_pago
                 """, (fecha,))
                 r['desglose_pagos'] = {p['forma_pago']: {'cant': p['cant'], 'suma': int(p['suma'])} for p in cur.fetchall()}
@@ -2053,10 +2053,10 @@ def api_analytics_resumen():
                 'año':    'DATE(created_at) >= DATE_SUB(CURDATE(), INTERVAL 365 DAY)',
             }
             where = rangos.get(periodo, rangos['mes'])
-            base  = f"FROM ordenes WHERE {where} AND activa=1"
+            base  = f"FROM ordenes WHERE {where} AND (activa=1 OR estado='entregada')"
 
             # KPIs principales
-            cur.execute(f"SELECT COUNT(*) AS n, COALESCE(SUM(total),0) AS bruto, COALESCE(AVG(total),0) AS ticket FROM ordenes WHERE {where} AND activa=1")
+            cur.execute(f"SELECT COUNT(*) AS n, COALESCE(SUM(total),0) AS bruto, COALESCE(AVG(total),0) AS ticket FROM ordenes WHERE {where} AND (activa=1 OR estado='entregada')")
             kpis = cur.fetchone()
 
             # Ventas por día (para gráfico de línea)
@@ -2073,7 +2073,7 @@ def api_analytics_resumen():
                        SUM(CAST(JSON_UNQUOTE(JSON_EXTRACT(item.value,'$.cantidad')) AS UNSIGNED)) AS uds,
                        SUM(CAST(JSON_UNQUOTE(JSON_EXTRACT(item.value,'$.total_item')) AS UNSIGNED)) AS ingresos
                 FROM ordenes, JSON_TABLE(items,'$[*]' COLUMNS(value JSON PATH '$')) AS item
-                WHERE {where} AND activa=1
+                WHERE {where} AND (activa=1 OR estado='entregada')
                 GROUP BY nombre ORDER BY uds DESC LIMIT 10
             """)
             top_productos = cur.fetchall()
@@ -2120,7 +2120,7 @@ def api_analytics_resumen():
                 'mes':    'DATE(created_at) >= DATE_SUB(CURDATE(),INTERVAL 60 DAY) AND DATE(created_at) < DATE_SUB(CURDATE(),INTERVAL 30 DAY)',
                 'año':    'DATE(created_at) >= DATE_SUB(CURDATE(),INTERVAL 730 DAY) AND DATE(created_at) < DATE_SUB(CURDATE(),INTERVAL 365 DAY)',
             }
-            cur.execute(f"SELECT COALESCE(SUM(total),0) AS bruto FROM ordenes WHERE {comp_rangos.get(periodo,comp_rangos['mes'])} AND activa=1")
+            cur.execute(f"SELECT COALESCE(SUM(total),0) AS bruto FROM ordenes WHERE {comp_rangos.get(periodo,comp_rangos['mes'])} AND (activa=1 OR estado='entregada')")
             anterior = cur.fetchone()
 
         db.close()
