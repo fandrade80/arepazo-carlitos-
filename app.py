@@ -3211,7 +3211,7 @@ def api_stats_publicos():
         with db.cursor() as cur:
             cur.execute("SELECT COUNT(*) n FROM productos WHERE disponible=1")
             total_productos = cur.fetchone()['n']
-            cur.execute("SELECT COUNT(*) n FROM ordenes WHERE activa=0 AND estado='entregada'")
+            cur.execute("SELECT COUNT(*) n FROM ordenes WHERE estado='entregada'")
             total_ordenes = cur.fetchone()['n']
             cur.execute("""SELECT COUNT(*) n FROM ordenes
                           WHERE estado='entregada'
