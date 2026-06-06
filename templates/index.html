@@ -293,7 +293,7 @@
         </div>
 
       </div>
-      <a href="#" class="btn-primary centered">VER MENÚ COMPLETO</a>
+      <button onclick="abrirMenuCompleto()" class="btn-primary centered" style="border:none;cursor:pointer;font-family:inherit">VER MENÚ COMPLETO</button>
     </div>
   </section>
 
@@ -884,5 +884,184 @@
     } catch(e) {}
   })();
   </script>
+  <!-- ═══ MODAL: MENÚ COMPLETO ═══ -->
+  <div id="modalMenuCompleto" style="display:none;position:fixed;inset:0;z-index:2000;
+       background:rgba(0,0,0,.82);overflow-y:auto;padding:20px 16px">
+    <div style="max-width:960px;margin:0 auto;background:#1a1008;border:1px solid #3a2810;
+                border-radius:18px;overflow:hidden;position:relative">
+
+      <!-- Header -->
+      <div style="background:linear-gradient(135deg,#2a1c0e,#1a1008);padding:28px 32px 20px;
+                  border-bottom:1px solid #3a2810;display:flex;align-items:center;justify-content:space-between">
+        <div>
+          <h2 style="font-family:'Playfair Display',serif;font-size:26px;color:#f5e6c8;margin-bottom:4px">
+            Nuestro Menú
+          </h2>
+          <p style="font-size:13px;color:#9a7a52">Todos nuestros productos disponibles</p>
+        </div>
+        <button onclick="cerrarMenuCompleto()"
+          style="width:40px;height:40px;border-radius:50%;border:1px solid #3a2810;
+                 background:transparent;color:#9a7a52;font-size:20px;cursor:pointer;
+                 display:flex;align-items:center;justify-content:center;transition:all .2s"
+          onmouseover="this.style.borderColor='#c8963e';this.style.color='#c8963e'"
+          onmouseout="this.style.borderColor='#3a2810';this.style.color='#9a7a52'">
+          ✕
+        </button>
+      </div>
+
+      <!-- Tabs de categoría -->
+      <div style="display:flex;gap:8px;padding:16px 32px;border-bottom:1px solid #3a2810;
+                  flex-wrap:wrap" id="menuCatTabs">
+        <button class="menu-cat-tab sel" data-cat="todos" onclick="filtrarMenuModal('todos',this)">Todos</button>
+        <button class="menu-cat-tab" data-cat="arepas" onclick="filtrarMenuModal('arepas',this)">🫓 Arepas</button>
+        <button class="menu-cat-tab" data-cat="especiales" onclick="filtrarMenuModal('especiales',this)">⭐ Especiales</button>
+        <button class="menu-cat-tab" data-cat="adicionales" onclick="filtrarMenuModal('adicionales',this)">➕ Adicionales</button>
+        <button class="menu-cat-tab" data-cat="bebidas" onclick="filtrarMenuModal('bebidas',this)">🥤 Bebidas</button>
+      </div>
+
+      <!-- Grid de productos -->
+      <div id="menuModalGrid" style="padding:24px 32px;min-height:200px">
+        <div style="text-align:center;padding:60px;color:#9a7a52">
+          <i class="fas fa-spinner fa-spin" style="font-size:28px"></i>
+          <p style="margin-top:12px;font-size:14px">Cargando menú...</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <style>
+  .menu-cat-tab {
+    padding: 8px 18px; border-radius: 20px; border: 1px solid #3a2810;
+    background: transparent; color: #9a7a52; font-size: 13px; font-weight: 700;
+    cursor: pointer; transition: all .2s; font-family: 'Lato', sans-serif;
+  }
+  .menu-cat-tab:hover { border-color: #c8963e; color: #e8b96a; }
+  .menu-cat-tab.sel { background: #c8963e; color: #1a1008; border-color: #c8963e; }
+  .menu-modal-card {
+    background: #2a1c0e; border: 1px solid #3a2810; border-radius: 12px;
+    overflow: hidden; transition: border-color .2s, transform .2s;
+  }
+  .menu-modal-card:hover { border-color: #c8963e; transform: translateY(-2px); }
+  .menu-modal-img {
+    width: 100%; height: 160px; background-size: cover; background-position: center;
+    background-color: #3a2810;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 40px;
+  }
+  </style>
+
+  <script>
+  let menuModalData = [];
+  let menuCatActual = 'todos';
+
+  async function abrirMenuCompleto() {
+    document.getElementById('modalMenuCompleto').style.display = 'block';
+    document.body.style.overflow = 'hidden';
+    if (!menuModalData.length) await cargarMenuModal();
+    else renderMenuModal();
+  }
+
+  function cerrarMenuCompleto() {
+    document.getElementById('modalMenuCompleto').style.display = 'none';
+    document.body.style.overflow = '';
+  }
+
+  // Cerrar al click fuera del contenido
+  document.getElementById('modalMenuCompleto').addEventListener('click', function(e) {
+    if (e.target === this) cerrarMenuCompleto();
+  });
+
+  // Cerrar con Escape
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') cerrarMenuCompleto();
+  });
+
+  async function cargarMenuModal() {
+    try {
+      const res  = await fetch('/api/productos');
+      const data = await res.json();
+      if (data.success) {
+        menuModalData = data.productos.filter(p => p.disponible);
+        renderMenuModal();
+      }
+    } catch(e) {
+      document.getElementById('menuModalGrid').innerHTML =
+        '<div style="text-align:center;padding:40px;color:#ef9a9a">Error al cargar el menú</div>';
+    }
+  }
+
+  function filtrarMenuModal(cat, btn) {
+    menuCatActual = cat;
+    document.querySelectorAll('.menu-cat-tab').forEach(b => b.classList.remove('sel'));
+    btn.classList.add('sel');
+    renderMenuModal();
+  }
+
+  const CAT_EMOJI = { arepas:'🫓', especiales:'⭐', adicionales:'➕', bebidas:'🥤' };
+  const CAT_LABEL = { arepas:'Arepas', especiales:'Especiales', adicionales:'Adicionales', bebidas:'Bebidas' };
+
+  function renderMenuModal() {
+    const grid = document.getElementById('menuModalGrid');
+    const lista = menuCatActual === 'todos'
+      ? menuModalData
+      : menuModalData.filter(p => p.categoria === menuCatActual);
+
+    if (!lista.length) {
+      grid.innerHTML = '<div style="text-align:center;padding:40px;color:#9a7a52;font-size:14px">Sin productos en esta categoría</div>';
+      return;
+    }
+
+    // Agrupar por categoría si es "todos"
+    const fmtPrecio = v => v ? '$' + parseInt(v).toLocaleString('es-CO') : '—';
+
+    if (menuCatActual !== 'todos') {
+      grid.innerHTML = `<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:14px">
+        ${lista.map(p => tarjetaProducto(p, fmtPrecio)).join('')}
+      </div>`;
+      return;
+    }
+
+    // Agrupar
+    const orden = ['arepas','especiales','bebidas','adicionales'];
+    const grupos = {};
+    lista.forEach(p => {
+      if (!grupos[p.categoria]) grupos[p.categoria] = [];
+      grupos[p.categoria].push(p);
+    });
+
+    grid.innerHTML = orden.filter(c => grupos[c]).map(cat => `
+      <div style="margin-bottom:28px">
+        <div style="font-family:'Playfair Display',serif;font-size:17px;color:#e8b96a;
+                    margin-bottom:14px;display:flex;align-items:center;gap:8px">
+          ${CAT_EMOJI[cat]||''} ${CAT_LABEL[cat]||cat}
+          <span style="background:#3a2810;color:#9a7a52;font-size:11px;font-weight:700;
+                       padding:2px 8px;border-radius:10px;font-family:'Lato',sans-serif">
+            ${grupos[cat].length}
+          </span>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:14px">
+          ${grupos[cat].map(p => tarjetaProducto(p, fmtPrecio)).join('')}
+        </div>
+      </div>`).join('');
+  }
+
+  function tarjetaProducto(p, fmtPrecio) {
+    const imgStyle = p.imagen
+      ? `background-image:url('/static/img/arepas/${p.imagen}')`
+      : `background-color:#3a2810`;
+    const emoji = CAT_EMOJI[p.categoria] || '🍽️';
+    return `<div class="menu-modal-card">
+      <div class="menu-modal-img" style="${imgStyle}">
+        ${!p.imagen ? `<span>${emoji}</span>` : ''}
+      </div>
+      <div style="padding:14px">
+        <div style="font-size:14px;font-weight:700;color:#f5e6c8;margin-bottom:6px;line-height:1.3">${p.nombre}</div>
+        ${p.descripcion ? `<div style="font-size:12px;color:#9a7a52;line-height:1.5;margin-bottom:8px">${p.descripcion}</div>` : ''}
+        <div style="font-size:16px;font-weight:700;color:#c8963e">${fmtPrecio(p.precio)}</div>
+      </div>
+    </div>`;
+  }
+  </script>
+
 </body>
 </html>
